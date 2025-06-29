@@ -9,7 +9,7 @@ body {
 }
 
 .container {
-    max-width: 1200px;
+    max-width: 1500px;
     margin: 0 auto;
     padding: 0 1rem;
 }
@@ -158,6 +158,128 @@ section {
 .card-content { padding: 1.5rem; }
 .card-content h3 { margin-top: 0; font-size: 1.5rem; color: #0056b3; }
 
+/* === PROMOTIONS SECTION === */
+.promotions-section {
+    background-color: #f8f9fa;
+}
+
+.promotions-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 1.5rem;
+}
+
+.promotion-card {
+    background-color: #ffffff;
+    border: 1px solid #e0e0e0;
+    border-radius: 12px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+    display: flex;
+    flex-direction: column; /* จัดเรียงเนื้อหาจากบนลงล่าง */
+    overflow: hidden;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.promotion-card:hover {
+    transform: translateY(-10px);
+    box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+}
+
+.promo-card-header img {
+    width: 100%;
+    height: auto;
+    display: block;
+}
+
+.promo-card-body {
+    padding: 1.5rem;
+    text-align: center;
+    flex-grow: 1; /* ทำให้ body ยืดเพื่อดัน footer ไปข้างล่างสุด */
+}
+
+.promo-card-body h3 {
+    font-size: 1.8rem;
+    margin-top: 0;
+    margin-bottom: 0.5rem;
+    color: #0056b3;
+}
+
+.promo-description {
+    color: #555;
+    margin-bottom: 1.5rem;
+    min-height: 40px; /* ทำให้ความสูงของส่วนนี้เท่าๆ กัน */
+}
+
+.promo-price {
+    background-color: #f1f1f1;
+    border-radius: 8px;
+    padding: 1rem;
+    margin-bottom: 1.5rem;
+}
+
+.promo-price .price-label {
+    font-size: 0.9rem;
+    display: block;
+    color: #666;
+}
+
+.promo-price .price-amount {
+    font-size: 2.8rem;
+    font-weight: 700;
+    color: #d92525; /* สีแดงเด่น */
+    line-height: 1;
+}
+
+.promo-price .price-unit {
+    font-size: 1.2rem;
+    color: #d92525;
+    margin-left: 0.25rem;
+}
+
+.promo-features {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    text-align: left;
+    color: #444;
+}
+
+.promo-features li {
+    margin-bottom: 0.6rem;
+    font-size: 0.95rem;
+}
+
+.promo-card-footer {
+    padding: 1.5rem;
+    background-color: #f8f9fa;
+    text-align: center;
+}
+
+.btn-secondary {
+    background-color: #28a745; /* สีเขียว */
+    color: white;
+    border: 1px solid #28a745;
+ display: inline-block; /* ทำให้ปุ่มไม่ยืดเต็ม แต่ยังกำหนดขนาดได้ */
+    padding: 0.8rem 2.5rem; /* กำหนดความกว้างปุ่มด้วย padding ซ้าย-ขวา */
+}
+
+.btn-secondary:hover {
+    background-color: #218838;
+}
+
+
+/* --- ปรับแก้ Responsive สำหรับส่วนโปรโมชั่น --- */
+@media (max-width: 1200px) {
+    .promotions-grid {
+        grid-template-columns: repeat(2, 1fr); /* Tablet: แถวละ 2 */
+    }
+}
+
+@media (max-width: 768px) {
+    .promotions-grid {
+        grid-template-columns: 1fr; /* Mobile: แถวละ 1 */
+    }
+}
 
 /* === KNOWLEDGE SECTION === */
 .knowledge-section { background-color: #f8f9fa; }
@@ -209,4 +331,86 @@ footer a:hover { text-decoration: underline; }
 @media (max-width: 576px) {
     .promo-grid, .benefits-grid { grid-template-columns: 1fr; }
     .nav-links a { margin: 0 0.5rem; }
+}
+
+/* === CONTACT PAGE === */
+.contact-page-section {
+    background-color: #f8f9fa;
+    min-height: 60vh; /* กำหนดความสูงขั้นต่ำ */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 5rem 0;
+}
+
+.contact-container {
+    max-width: 600px;
+    width: 100%;
+    background-color: #ffffff;
+    padding: 3rem;
+    border-radius: 12px;
+    box-shadow: 0 5px 25px rgba(0,0,0,0.1);
+    text-align: center;
+}
+
+.contact-buttons-container {
+    margin-top: 2rem;
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem; /* ระยะห่างระหว่างปุ่ม */
+}
+
+.contact-btn {
+    display: inline-flex; /* ใช้ inline-flex เพื่อให้ icon กับ text อยู่ข้างกัน */
+    align-items: center;
+    justify-content: center;
+    padding: 1rem;
+    border-radius: 8px;
+    text-decoration: none;
+    font-size: 1.2rem;
+    font-weight: 700;
+    color: white;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+}
+
+.contact-btn:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 6px 15px rgba(0,0,0,0.15);
+}
+
+.contact-btn svg {
+    width: 30px;
+    height: 30px;
+    margin-right: 1rem;
+}
+
+.facebook-btn {
+    background-color: #1877F2;
+}
+
+.line-btn {
+    background-color: #06C755;
+}
+
+.other-contacts {
+    margin-top: 3rem;
+    padding-top: 2rem;
+    border-top: 1px solid #e0e0e0;
+    color: #666;
+}
+.other-contacts p {
+    margin: 0.5rem 0;
+}
+.other-contacts a {
+    color: #0056b3;
+    font-weight: bold;
+}
+
+#contact-footer {
+    background-color: #f8f9fa;
+    color: #6c757d;
+    text-align: center;
+    padding: 2rem 0;
+    border-top: 1px solid #e0e0e0;
 }
