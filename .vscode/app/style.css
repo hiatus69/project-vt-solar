@@ -474,3 +474,98 @@ footer a:hover { text-decoration: underline; }
         margin-bottom: 2.5rem;
     }
 }
+/* === PORTFOLIO / SHOWCASE SECTION === */
+
+.portfolio-section {
+    padding: 5rem 0;
+    background-color: #f8f9fa; /* สีพื้นหลังเทาอ่อน */
+}
+
+.portfolio-section h2 {
+    text-align: center;
+    font-size: 2.5rem;
+    margin-bottom: 3rem;
+    color: #0d2c4b; /* Dark Blue */
+}
+
+.showcase-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 2rem;
+}
+
+.showcase-card {
+    background-color: #ffffff;
+    border-radius: 10px;
+    box-shadow: 0 5px 20px rgba(0,0,0,0.07);
+    overflow: hidden;
+    display: flex;
+    flex-direction: column; /* จัดเรียงเนื้อหาจากบนลงล่าง */
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.showcase-card:hover {
+    transform: translateY(-8px);
+    box-shadow: 0 8px 25px rgba(0,0,0,0.12);
+}
+
+.card-image-container img {
+    width: 100%;
+    height: auto;
+    aspect-ratio: 16 / 10; /* กำหนดสัดส่วนภาพให้เท่ากันทุกการ์ด */
+    object-fit: cover; /* ทำให้รูปเต็มพื้นที่โดยไม่เสียสัดส่วน */
+    display: block;
+}
+
+.card-text-content {
+    padding: 1.5rem;
+    display: flex;
+    flex-direction: column;
+    flex-grow: 1; /* ทำให้ส่วนนี้ยืดเพื่อดันปุ่มไปข้างล่าง */
+}
+
+.card-text-content h3 {
+    font-size: 1.3rem;
+    margin-top: 0;
+    margin-bottom: 1rem;
+    color: #0d2c4b;
+    line-height: 1.4;
+}
+
+.card-text-content p {
+    color: #555;
+    line-height: 1.7;
+    margin-bottom: 1.5rem;
+    flex-grow: 1; /* ทำให้ย่อหน้ายืดเพื่อดันปุ่มไปข้างล่าง */
+}
+
+.btn-read-more {
+    display: inline-block;
+    background-color: #0d2c4b; /* Dark Blue */
+    color: #ffffff;
+    padding: 0.7rem 1.5rem;
+    border-radius: 5px;
+    text-decoration: none;
+    text-align: center;
+    font-weight: bold;
+    align-self: flex-start; /* จัดปุ่มให้อยู่ซ้าย (ถ้าต้องการให้อยู่กลางให้ใช้ align-self: center) */
+    transition: background-color 0.3s;
+}
+
+.btn-read-more:hover {
+    background-color: #0056b3; /* Bright Blue */
+}
+
+
+/* --- Responsive for Showcase Section --- */
+@media (max-width: 992px) {
+    .showcase-grid {
+        grid-template-columns: 1fr 1fr; /* Tablet: แถวละ 2 */
+    }
+}
+
+@media (max-width: 768px) {
+    .showcase-grid {
+        grid-template-columns: 1fr; /* Mobile: แถวละ 1 */
+    }
+}
