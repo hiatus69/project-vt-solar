@@ -31,12 +31,14 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // เริ่มไปดึงข้อมูล
     fetch(apiUrl)
-        .then(response => {
-            if (!response.ok) { throw new Error('Network response was not ok'); }
-            return response.json();
-        })
-        .then(data => {
-            const promotions = data.data;
+        .then(response => response.json())
+        .then(apiResponse => { // เปลี่ยนชื่อตัวแปรเป็น apiResponse เพื่อความชัดเจน
+            
+            // --- จุดที่แก้ไขสำคัญ ---
+            // เราจะเข้าถึงข้อมูลจาก apiResponse.data โดยตรง
+            const promotions = apiResponse.data; 
+            // --- จบจุดที่แก้ไขสำคัญ ---
+            
             promotionsGrid.innerHTML = '';
 
             if (promotions.length === 0) {
@@ -45,39 +47,28 @@ document.addEventListener('DOMContentLoaded', () => {
             }
 
             promotions.forEach(promotion => {
-                const attributes = promotion.attributes;
+                // ไม่ต้องมี const attributes = promotion.attributes; แล้ว
                 
-                // ==========================================================
-                // VVVV --- โค้ดส่วนป้องกัน Error ที่สำคัญอยู่ตรงนี้ --- VVVV
-                // ==========================================================
-                
-                // 1. สร้าง URL รูปภาพสำรองไว้เป็นค่าเริ่มต้น
                 let imageUrl = 'https://placehold.co/600x400/cccccc/333?text=No+Image';
-                
-                // 2. ตรวจสอบก่อนว่ามีข้อมูล promoImage และ data อยู่ข้างในจริงหรือไม่
-                if (attributes.promoImage && attributes.promoImage.data) {
-                    // 3. ถ้ามี ค่อยใช้รูปจริง
-                    imageUrl = `http://localhost:1337${attributes.promoImage.data.attributes.url}`;
+                // อ่านข้อมูลรูปภาพจากโครงสร้างใหม่
+                if (promotion.promoImage && promotion.promoImage.url) {
+                    imageUrl = `http://localhost:1337${promotion.promoImage.url}`;
                 }
-                
-                // ==========================================================
-                // ^^^^ --- สิ้นสุดส่วนป้องกัน Error --- ^^^^
-                // ==========================================================
 
-                const featuresHTML = renderFeatures(attributes.features);
+                const featuresHTML = renderFeatures(promotion.features);
 
-                // สร้างโค้ด HTML ของการ์ด 1 ใบ
+                // สร้างโค้ด HTML ของการ์ด 1 ใบ โดยอ่านจาก promotion โดยตรง
                 const cardHTML = `
-                    <div class="promotion-card">
+                    <div class="promo-card">
                         <div class="promo-card-header">
-                            <img src="${imageUrl}" alt="ภาพโปรโมชั่น ${attributes.packageName || 'โปรโมชั่น'}">
+                            <img src="${imageUrl}" alt="ภาพโปรโมชั่น ${promotion.packageName || 'โปรโมชั่น'}">
                         </div>
                         <div class="promo-card-body">
-                            <h3>${attributes.packageName}</h3>
-                            <p class="promo-description">${attributes.description}</p>
+                            <h3>${promotion.packageName}</h3>
+                            <p class="promo-description">${promotion.description}</p>
                             <div class="promo-price">
                                 <span class="price-label">เริ่มต้นเพียง</span>
-                                <span class="price-amount">${(attributes.price || 0).toLocaleString('en-US')}</span>
+                                <span class="price-amount">${(promotion.price || 0).toLocaleString('en-US')}</span>
                                 <span class="price-unit">บาท</span>
                             </div>
                             ${featuresHTML}
