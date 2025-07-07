@@ -1,6 +1,6 @@
 document.addEventListener('DOMContentLoaded', () => {
 
-    const strapiUrl = 'http://localhost:1337';
+    const strapiUrl = 'https://api.vertexplus99.com';
 // --- ฟังก์ชันใหม่สำหรับโหลด "บริการของเรา" ---
     function loadMainServices() {
         const servicesApiUrl = `${strapiUrl}/api/services?populate=*&sort=displayOrder:asc`;
