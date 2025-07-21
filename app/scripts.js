@@ -54,7 +54,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         </div>
                     `;
                     // --- จบจุดที่แก้ไข ---
-                    
+
                     servicesGrid.innerHTML += cardHTML;
                 });
             })
@@ -76,7 +76,7 @@ document.addEventListener('DOMContentLoaded', () => {
             .then(response => response.json())
             .then(response => {
                 const promotions = response.data;
-                promoGrid.innerHTML = ''; 
+                promoGrid.innerHTML = '';
 
                 if (!promotions || promotions.length === 0) {
                     promoGrid.innerHTML = '<p>ยังไม่มีโปรโมชั่นในขณะนี้</p>';
@@ -85,14 +85,14 @@ document.addEventListener('DOMContentLoaded', () => {
 
                 promotions.forEach(promotion => {
                     const item = promotion.attributes || promotion;
-                    
+
                     let imageUrl = 'https://placehold.co/600x400/cccccc/333?text=No+Image';
                     if (item.promoImage && item.promoImage.data) {
                         imageUrl = `${strapiUrl}${item.promoImage.data.attributes.url}`;
                     } else if (item.promoImage && item.promoImage.url) {
                          imageUrl = `${strapiUrl}${item.promoImage.url}`;
                     }
-                    
+
                     const featuresHTML = renderFeatures(item.features);
 
                     const cardHTML = `
@@ -126,7 +126,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // --- ฟังก์ชันสำหรับแปลง Rich Text (ใช้ร่วมกัน) ---
     function renderFeatures(featuresArray) {
-        if (!featuresArray) return ''; 
+        if (!featuresArray) return '';
         let featuresHtml = '<ul class="promo-features">';
         featuresArray.forEach(featureItem => {
             if (featureItem.type === 'paragraph') {
@@ -144,5 +144,50 @@ document.addEventListener('DOMContentLoaded', () => {
     // --- เรียกใช้งานฟังก์ชันทั้งหมดเมื่อหน้าเว็บโหลด ---
     loadMainServices();
     loadSpecialPromotions();
-    
+
+});
+
+document.addEventListener('DOMContentLoaded', () => {
+
+    const contentContainer = document.getElementById('app-content');
+    const navLinks = document.querySelectorAll('.nav-link');
+
+    // ฟังก์ชันสำหรับโหลดเนื้อหาหน้าเว็บ
+    const loadContent = (url) => {
+        fetch(url)
+            .then(response => response.text())
+            .then(html => {
+                contentContainer.innerHTML = html;
+
+                // --- จุดที่สำคัญที่สุด ---
+                // หลังจากวางโครงสร้างหน้าเสร็จแล้ว ให้เรียกฟังก์ชันเพื่อดึงข้อมูลมาใส่
+                if (url === 'home-content.html') {
+                    loadMainServices();
+                    loadSpecialPromotions();
+                }
+                // ถ้ามีหน้าอื่นที่ต้องดึงข้อมูล ก็เพิ่มเงื่อนไขที่นี่
+                // else if (url === 'portfolio.html') {
+                //     loadPortfolioData();
+                // }
+
+            })
+            .catch(error => {
+                console.error('Failed to load content:', error);
+            });
+    };
+
+    // โหลดเนื้อหาหน้าแรกเมื่อเปิดเว็บครั้งแรก
+    loadContent('home-content.html');
+
+    // เพิ่ม Event Listener ให้กับทุกๆ ลิงก์ในเมนู
+    navLinks.forEach(link => {
+        link.addEventListener('click', (event) => {
+            event.preventDefault();
+            const href = link.getAttribute('href');
+            loadContent(href);
+            navLinks.forEach(item => item.classList.remove('active'));
+            link.classList.add('active');
+        });
+    });
+
 });
