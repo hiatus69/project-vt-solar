@@ -469,7 +469,7 @@ footer a:hover { text-decoration: underline; }
         grid-template-columns: 1fr; /* ทำให้เหลือ 1 คอลัมน์บนจอขนาดเล็ก */
         gap: 2rem;
     }
-    
+
     .about-page-title {
         margin-bottom: 2.5rem;
     }
@@ -568,4 +568,142 @@ footer a:hover { text-decoration: underline; }
     .showcase-grid {
         grid-template-columns: 1fr; /* Mobile: แถวละ 1 */
     }
+}
+/* === AUTHENTICATION PAGE STYLES (Login/Register) === */
+
+.auth-page-section {
+    padding: 5rem 0;
+    background-color: #f8f9fa;
+}
+
+.auth-container {
+    max-width: 600px;
+    margin: 0 auto;
+    background-color: #ffffff;
+    padding: 3rem;
+    border-radius: 12px;
+    box-shadow: 0 5px 25px rgba(0,0,0,0.07);
+}
+
+.auth-container h2 {
+    text-align: center;
+    margin-top: 0;
+}
+
+.auth-form {
+    margin-top: 2.5rem;
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+}
+
+.form-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1.5rem;
+}
+
+.form-group {
+    display: flex;
+    flex-direction: column;
+    text-align: left;
+}
+
+.form-group label {
+    margin-bottom: 0.5rem;
+    font-weight: bold;
+    color: #555;
+}
+
+.form-group input,
+.form-group textarea {
+    padding: 0.8rem 1rem;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    font-size: 1rem;
+    font-family: 'Kanit', sans-serif;
+}
+
+.form-group textarea {
+    resize: vertical;
+}
+
+.form-feedback {
+    padding: 1rem;
+    border-radius: 5px;
+    display: none; /* ซ่อนไว้ก่อน */
+    font-weight: bold;
+}
+
+.form-feedback.error {
+    background-color: #f8d7da;
+    color: #721c24;
+    display: block;
+}
+
+.form-feedback.success {
+    background-color: #d4edda;
+    color: #155724;
+    display: block;
+}
+
+.auth-form .btn {
+    width: 100%;
+    padding: 1rem;
+    font-size: 1.1rem;
+}
+
+.auth-switch {
+    margin-top: 2rem;
+    text-align: center;
+}
+/* === PROFILE PAGE STYLES === */
+.profile-page-section {
+    padding: 5rem 0;
+    background-color: #f8f9fa;
+}
+
+.profile-container {
+    max-width: 900px;
+    margin: 0 auto;
+    background-color: #ffffff;
+    padding: 3rem;
+    border-radius: 12px;
+    box-shadow: 0 5px 25px rgba(0,0,0,0.07);
+}
+
+.profile-data-grid {
+    display: grid;
+    grid-template-columns: 1fr 2fr;
+    gap: 1rem 2rem;
+    padding: 2rem;
+    background-color: #f1f1f1;
+    border-radius: 8px;
+    margin-bottom: 3rem;
+    text-align: left;
+}
+
+.profile-data-grid .label {
+    font-weight: bold;
+    color: #555;
+}
+
+.profile-container h3 {
+    text-align: center;
+    margin-top: 3rem;
+    margin-bottom: 1.5rem;
+}
+
+.orders-list {
+    text-align: center;
+    color: #777;
+}
+
+#logout-button {
+    background-color: #dc3545; /* สีแดง */
+    color: white;
+    padding: 0.5rem 1rem;
+    border-radius: 5px;
+    text-decoration: none;
+    font-weight: bold;
 }
