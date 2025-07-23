@@ -262,12 +262,58 @@ function handleLogin() {
     });
 }
 
+// --- ฟังก์ชันใหม่: สำหรับแสดงข้อมูลผู้ใช้ในหน้าโปรไฟล์ ---
+function loadUserProfile() {
+    const profileContainer = document.getElementById('user-profile-data');
+    if (!profileContainer) return;
+
+    const user = JSON.parse(localStorage.getItem('user'));
+
+    if (user) {
+        profileContainer.innerHTML = `
+            <span class="label">ชื่อ-นามสกุล:</span>
+            <span>${user.firstname || ''} ${user.lastname || ''}</span>
+            <span class="label">อีเมล:</span>
+            <span>${user.email}</span>
+            <span class="label">ที่อยู่:</span>
+            <span>${user.address || 'ยังไม่ได้ระบุ'}</span>
+            <span class="label">เบอร์โทรศัพท์:</span>
+            <span>${user.phone_number || 'ยังไม่ได้ระบุ'}</span>
+        `;
+    } else {
+        profileContainer.innerHTML = '<p>ไม่พบข้อมูลผู้ใช้</p>';
+    }
+}
+
 // ==========================================================
 // ส่วนที่ 2: โค้ดสำหรับเปลี่ยนหน้า (SPA Logic) - ทำงานแค่ครั้งเดียว
 // ==========================================================
 document.addEventListener('DOMContentLoaded', () => {
 
     const contentContainer = document.getElementById('app-content');
+    const navLinksContainer = document.querySelector('.nav-links');
+
+     // --- ฟังก์ชันใหม่: สำหรับอัปเดตเมนูตามสถานะล็อกอิน ---
+    function updateNavbar() {
+        const user = localStorage.getItem('user');
+
+        if (user) {
+            // ถ้าล็อกอินแล้ว
+            navLinksContainer.innerHTML = `
+                <a href="home-content.html" class="nav-link">หน้าหลัก</a>
+                <a href="profile.html" class="nav-link">โปรไฟล์</a>
+                <a href="#" id="logout-button" class="nav-link">ออกจากระบบ</a>
+            `;
+        } else {
+            // ถ้ายังไม่ล็อกอิน
+            navLinksContainer.innerHTML = `
+                <a href="home-content.html" class="nav-link active">หน้าหลัก</a>
+                <a href="about.html" class="nav-link">เกี่ยวกับเรา</a>
+                <a href="contact.html" class="nav-link">ติดต่อเรา</a>
+                <a href="login.html" class="nav-link">เข้าสู่ระบบ</a>
+            `;
+        }
+    }
 
     // ฟังก์ชันสำหรับโหลดเนื้อหาหน้าเว็บ
     const loadContent = (url) => {
@@ -292,6 +338,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
                 else if (url.includes('login.html')) {
                     handleLogin(); // <-- เรียกใช้ฟังก์ชันล็อกอินที่นี่
+                }
+                else if (url.includes('profile.html')) {
+                    loadUserProfile(); // <-- เรียกใช้ฟังก์ชันโหลดโปรไฟล์ที่นี่
                 }
             })
             .catch(error => {
@@ -322,7 +371,23 @@ document.addEventListener('DOMContentLoaded', () => {
 
             // (ทางเลือก) อัปเดต URL hash เพื่อให้ปุ่ม back/forward ทำงานได้
             window.location.hash = href;
+        // จัดการการคลิกที่ลิงก์ในเมนู
+        if (link && !event.target.matches('#logout-button')) {
+            event.preventDefault();
+            const href = link.getAttribute('href');
+            loadContent(href);
+            // ... (โค้ดอัปเดต active class)
         }
+
+        // จัดการการคลิกที่ปุ่มออกจากระบบ
+        if (event.target.matches('#logout-button')) {
+            event.preventDefault();
+            localStorage.removeItem('jwt');
+            localStorage.removeItem('user');
+            alert('ออกจากระบบสำเร็จ!');
+            window.location.href = 'index.html'; // โหลดหน้าเว็บใหม่ทั้งหมด
+        }
+      }
     });
 
     // (ทางเลือก) ทำให้ปุ่ม back/forward ของเบราว์เซอร์ทำงานได้
