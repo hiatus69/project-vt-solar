@@ -1,6 +1,7 @@
-document.addEventListener('DOMContentLoaded', () => {
-
-    const strapiUrl = 'https://api.vertexplus99.com';
+// ==========================================================
+// ส่วนที่ 1: ฟังก์ชันสำหรับดึงข้อมูลจาก Strapi (นิยามไว้ก่อน)
+// ==========================================================
+ const strapiUrl = 'https://api.vertexplus99.com';
 // --- ฟังก์ชันใหม่สำหรับโหลด "บริการของเรา" ---
     function loadMainServices() {
         const servicesApiUrl = `${strapiUrl}/api/services?populate=*&sort=displayOrder:asc`;
@@ -145,49 +146,193 @@ document.addEventListener('DOMContentLoaded', () => {
     loadMainServices();
     loadSpecialPromotions();
 
-});
+// --- ฟังก์ชันสำหรับจัดการการสมัครสมาชิก ---
+function handleRegistration() {
+    const registerForm = document.getElementById('register-form');
+    if (!registerForm) return; // ถ้าไม่เจอฟอร์มนี้ ก็ไม่ต้องทำอะไร
 
+    const feedbackDiv = document.getElementById('register-feedback');
+
+    registerForm.addEventListener('submit', (event) => {
+        event.preventDefault(); // หยุดการส่งฟอร์มแบบปกติ
+
+        // ดึงข้อมูลจากฟอร์ม
+        const firstname = document.getElementById('reg-firstname').value;
+        const lastname = document.getElementById('reg-lastname').value;
+        const address = document.getElementById('reg-address').value;
+        const phone = document.getElementById('reg-phone').value;
+        const email = document.getElementById('reg-email').value;
+        const password = document.getElementById('reg-password').value;
+
+        // เตรียมข้อมูลเพื่อส่งไปที่ Strapi
+        const registrationData = {
+            username: email, // Strapi ใช้ username เป็นค่า unique, เราจะใช้อีเมลแทน
+            email: email,
+            password: password,
+            firstname: firstname,
+            lastname: lastname,
+            address: address,
+            phone_number: phone
+        };
+
+        // ส่งข้อมูลไปที่ API สำหรับการลงทะเบียนของ Strapi
+        fetch(`${strapiUrl}/api/auth/local/register`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(registrationData),
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.error) {
+                // ถ้า Strapi ส่ง error กลับมา
+                feedbackDiv.textContent = data.error.message;
+                feedbackDiv.className = 'form-feedback error';
+            } else {
+                // ถ้าสำเร็จ
+                feedbackDiv.textContent = 'สมัครสมาชิกสำเร็จ! กำลังนำคุณไปยังหน้าเข้าสู่ระบบ...';
+                feedbackDiv.className = 'form-feedback success';
+
+                // รอ 2 วินาที แล้วค่อยพาไปหน้า login
+                setTimeout(() => {
+                    // ใช้ฟังก์ชัน loadContent ของเราเพื่อเปลี่ยนหน้า
+                    loadContent('login.html');
+                }, 2000);
+            }
+        })
+        .catch(error => {
+            console.error('Registration error:', error);
+            feedbackDiv.textContent = 'เกิดข้อผิดพลาดในการเชื่อมต่อ กรุณาลองใหม่อีกครั้ง';
+            feedbackDiv.className = 'form-feedback error';
+        });
+    });
+}
+
+// --- ฟังก์ชันสำหรับจัดการการเข้าสู่ระบบ ---
+function handleLogin() {
+    const loginForm = document.getElementById('login-form');
+    if (!loginForm) return;
+
+    const feedbackDiv = document.getElementById('login-feedback');
+
+    loginForm.addEventListener('submit', (event) => {
+        event.preventDefault();
+
+        const email = document.getElementById('login-email').value;
+        const password = document.getElementById('login-password').value;
+
+        // ส่งข้อมูลไปที่ API สำหรับการล็อกอินของ Strapi
+        fetch(`${strapiUrl}/api/auth/local`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                identifier: email, // Strapi ใช้ identifier สำหรับ email/username
+                password: password,
+            }),
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.error) {
+                feedbackDiv.textContent = 'อีเมลหรือรหัสผ่านไม่ถูกต้อง';
+                feedbackDiv.className = 'form-feedback error';
+            } else {
+                // ถ้าล็อกอินสำเร็จ
+                // 1. เก็บ "บัตรผ่าน" (JWT) และข้อมูลผู้ใช้ไว้ในเบราว์เซอร์
+                localStorage.setItem('jwt', data.jwt);
+                localStorage.setItem('user', JSON.stringify(data.user));
+
+                feedbackDiv.textContent = 'เข้าสู่ระบบสำเร็จ!';
+                feedbackDiv.className = 'form-feedback success';
+
+                // 2. โหลดหน้าเว็บใหม่ทั้งหมดเพื่ออัปเดตสถานะการล็อกอิน
+                // ในอนาคตเราจะเปลี่ยนเป็นการพาไปหน้าโปรไฟล์
+                setTimeout(() => {
+                    window.location.href = 'index.html';
+                }, 1000);
+            }
+        })
+        .catch(error => {
+            console.error('Login error:', error);
+            feedbackDiv.textContent = 'เกิดข้อผิดพลาดในการเชื่อมต่อ กรุณาลองใหม่อีกครั้ง';
+            feedbackDiv.className = 'form-feedback error';
+        });
+    });
+}
+
+// ==========================================================
+// ส่วนที่ 2: โค้ดสำหรับเปลี่ยนหน้า (SPA Logic) - ทำงานแค่ครั้งเดียว
+// ==========================================================
 document.addEventListener('DOMContentLoaded', () => {
 
     const contentContainer = document.getElementById('app-content');
-    const navLinks = document.querySelectorAll('.nav-link');
 
     // ฟังก์ชันสำหรับโหลดเนื้อหาหน้าเว็บ
     const loadContent = (url) => {
+        // ก่อนโหลดเนื้อหาใหม่ ให้แสดงสถานะกำลังโหลด (ถ้าต้องการ)
+        contentContainer.innerHTML = '<h2>กำลังโหลดเนื้อหา...</h2>';
+
         fetch(url)
-            .then(response => response.text())
+            .then(response => {
+                if (!response.ok) throw new Error('Network response was not ok.');
+                return response.text();
+            })
             .then(html => {
                 contentContainer.innerHTML = html;
 
-                // --- จุดที่สำคัญที่สุด ---
                 // หลังจากวางโครงสร้างหน้าเสร็จแล้ว ให้เรียกฟังก์ชันเพื่อดึงข้อมูลมาใส่
-                if (url === 'home-content.html') {
+                if (url.includes('home-content.html')) {
                     loadMainServices();
                     loadSpecialPromotions();
                 }
-                // ถ้ามีหน้าอื่นที่ต้องดึงข้อมูล ก็เพิ่มเงื่อนไขที่นี่
-                // else if (url === 'portfolio.html') {
-                //     loadPortfolioData();
-                // }
-
+                else if (url.includes('register.html')) {
+                    handleRegistration(); // <-- เรียกใช้ฟังก์ชันสมัครสมาชิกที่นี่
+                }
+                else if (url.includes('login.html')) {
+                    handleLogin(); // <-- เรียกใช้ฟังก์ชันล็อกอินที่นี่
+                }
             })
             .catch(error => {
                 console.error('Failed to load content:', error);
+                contentContainer.innerHTML = '<h1>เกิดข้อผิดพลาดในการโหลดหน้าเว็บ</h1>';
             });
     };
 
     // โหลดเนื้อหาหน้าแรกเมื่อเปิดเว็บครั้งแรก
     loadContent('home-content.html');
 
-    // เพิ่ม Event Listener ให้กับทุกๆ ลิงก์ในเมนู
-    navLinks.forEach(link => {
-        link.addEventListener('click', (event) => {
+    // เพิ่ม Event Listener ให้กับทุกๆ ลิงก์ในเมนู (ใช้ Event Delegation)
+    document.body.addEventListener('click', (event) => {
+        // ตรวจสอบว่าสิ่งที่คลิกคือ .nav-link หรือไม่
+        if (event.target.matches('.nav-link')) {
             event.preventDefault();
-            const href = link.getAttribute('href');
+            const href = event.target.getAttribute('href');
+
+            // ไม่โหลดซ้ำถ้าคลิกหน้าเดิม
+            if(window.location.hash === `#${href}`) return;
+
             loadContent(href);
-            navLinks.forEach(item => item.classList.remove('active'));
-            link.classList.add('active');
-        });
+
+            // อัปเดต active class ที่เมนู
+            document.querySelectorAll('.nav-link').forEach(item => item.classList.remove('active'));
+            // หาเมนูที่ตรงกับ href แล้วเพิ่ม active class
+            document.querySelector(`.nav-link[href='${href}']`).classList.add('active');
+
+            // (ทางเลือก) อัปเดต URL hash เพื่อให้ปุ่ม back/forward ทำงานได้
+            window.location.hash = href;
+        }
+    });
+
+    // (ทางเลือก) ทำให้ปุ่ม back/forward ของเบราว์เซอร์ทำงานได้
+    window.addEventListener('popstate', () => {
+        const hash = window.location.hash.substring(1);
+        if (hash) {
+            loadContent(hash);
+        } else {
+            loadContent('home-content.html');
+        }
     });
 
 });
