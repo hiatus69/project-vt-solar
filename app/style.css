@@ -707,3 +707,71 @@ footer a:hover { text-decoration: underline; }
     text-decoration: none;
     font-weight: bold;
 }
+
+/* === EMPLOYEE DASHBOARD & DETAIL PAGES === */
+
+.dashboard-page-section {
+    padding: 4rem 0;
+    background-color: #f8f9fa;
+}
+
+.job-queue-container {
+    background-color: #ffffff;
+    padding: 2rem;
+    border-radius: 8px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+}
+
+.job-queue-table {
+    width: 100%;
+    border-collapse: collapse;
+    text-align: left;
+}
+
+.job-queue-table th,
+.job-queue-table td {
+    padding: 1rem;
+    border-bottom: 1px solid #e0e0e0;
+}
+
+.job-queue-table th {
+    background-color: #f1f1f1;
+}
+
+.job-queue-table td .nav-link {
+    font-weight: bold;
+    text-decoration: none;
+    color: #0056b3;
+}
+
+.job-detail-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 2rem;
+}
+
+.detail-card {
+    background-color: #ffffff;
+    padding: 2rem;
+    border-radius: 8px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+}
+
+.detail-card h3 {
+    margin-top: 0;
+    border-bottom: 2px solid #f1f1f1;
+    padding-bottom: 1rem;
+    margin-bottom: 1.5rem;
+}
+
+.info-box p, .notes-box {
+    margin: 0.5rem 0;
+    line-height: 1.8;
+}
+
+.notes-box {
+    background-color: #f8f9fa;
+    padding: 1rem;
+    border-radius: 5px;
+    min-height: 50px;
+}
