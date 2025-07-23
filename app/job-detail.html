@@ -1,0 +1,64 @@
+<main>
+    <section class="dashboard-page-section">
+        <div class="container" id="job-detail-container">
+            <h2>รายละเอียดงาน #<span id="order-id-display"></span></h2>
+            <div class="job-detail-grid">
+
+                <div class="detail-card">
+                    <h3>ข้อมูลลูกค้า</h3>
+                    <div id="customer-info" class="info-box">
+                        </div>
+                </div>
+
+                <div class="detail-card">
+                    <h3>รายละเอียดออเดอร์</h3>
+                    <div id="order-items-info" class="info-box">
+                        </div>
+                    <p><strong>หมายเหตุจากลูกค้า:</strong></p>
+                    <p id="customer-notes" class="notes-box"></p>
+                </div>
+
+                <div class="detail-card">
+                    <h3>จัดการสถานะงาน</h3>
+                    <form id="update-status-form">
+                        <div class="form-group">
+                            <label for="order-status">เปลี่ยนสถานะปัจจุบันเป็น:</label>
+                            <select id="order-status" name="status">
+                                <option value="รอการติดต่อ">รอการติดต่อ</option>
+                                <option value="ยืนยันนัดหมาย">ยืนยันนัดหมาย</option>
+                                <option value="กำลังติดตั้ง">กำลังติดตั้ง</option>
+                                <option value="เสร็จสิ้น">เสร็จสิ้น</option>
+                                <option value="ยกเลิก">ยกเลิก</option>
+                            </select>
+                        </div>
+                        <button type="submit" class="btn btn-primary">อัปเดตสถานะ</button>
+                        <div class="form-feedback" id="status-feedback"></div>
+                    </form>
+                </div>
+
+                <div class="detail-card" id="completion-card">
+                    <h3>จบงานและส่งหลักฐาน</h3>
+                    <p><i>ส่วนนี้จะใช้งานได้เมื่องานอยู่ในสถานะ "กำลังติดตั้ง" หรือ "เสร็จสิ้น"</i></p>
+                    <form id="complete-order-form">
+                        <div class="form-group">
+                            <label for="proof-image">รูปภาพหลักฐานการจบงาน</label>
+                            <input type="file" id="proof-image" name="proofImage">
+                        </div>
+                        <div class="form-group">
+                            <label for="completed-by">ชื่อผู้จบงาน (พนักงาน)</label>
+                            <input type="text" id="completed-by" name="completedBy" >
+                        </div>
+                         <div class="form-feedback" id="completion-feedback"></div>
+                        <button type="submit" class="btn btn-secondary">ยืนยันการจบงาน</button>
+                    </form>
+                </div>
+
+            </div>
+        </div>
+    </section>
+</main>
+<footer class="page-specific-footer">
+    <div class="container">
+        <p class="copyright">&copy; 2025 VERTEX TECHNOLOGY PLUS CO, LTD. สงวนลิขสิทธิ์.</p>
+    </div>
+</footer>
