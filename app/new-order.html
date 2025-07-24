@@ -1,0 +1,45 @@
+<main>
+    <section class="order-page-section">
+        <div class="container order-container">
+            <h2>ยืนยันการขอรับบริการ</h2>
+            <p class="section-subtitle">กรุณาตรวจสอบข้อมูลและเพิ่มรายละเอียดก่อนส่งคำขอ</p>
+
+            <div id="selected-package-summary" class="package-summary">
+                <p>กำลังโหลดข้อมูลแพ็กเกจ...</p>
+            </div>
+
+            <form id="new-order-form" class="auth-form">
+                <h3>ข้อมูลติดต่อของคุณ</h3>
+                <div class="form-group">
+                    <label>ชื่อ-นามสกุล</label>
+                    <input type="text" id="order-fullname" readonly>
+                </div>
+                <div class="form-group">
+                    <label>ที่อยู่สำหรับติดตั้ง</label>
+                    <textarea id="order-address" rows="3" readonly></textarea>
+                </div>
+                 <div class="form-group">
+                    <label>เบอร์โทรศัพท์</label>
+                    <input type="tel" id="order-phone" readonly>
+                </div>
+
+                <hr>
+
+                <div class="form-group">
+                    <label for="order-notes">รายละเอียดเพิ่มเติม (ถ้ามี)</label>
+                    <textarea id="order-notes" name="customerNotes" rows="4" placeholder="เช่น ลักษณะหลังคา, เวลาที่สะดวกให้ติดต่อกลับ"></textarea>
+                </div>
+
+                <div class="form-feedback" id="order-feedback"></div>
+
+                <button type="submit" class="btn btn-primary">ยืนยันการสร้างคิว</button>
+            </form>
+        </div>
+    </section>
+</main>
+
+<footer class="page-specific-footer">
+    <div class="container">
+        <p class="copyright">&copy; 2025 VERTEX TECHNOLOGY PLUS CO, LTD. สงวนลิขสิทธิ์.</p>
+    </div>
+</footer>
