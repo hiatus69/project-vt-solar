@@ -1,7 +1,7 @@
 // ==========================================================
 // ส่วนที่ 1: ฟังก์ชันสำหรับดึงข้อมูลจาก Strapi (นิยามไว้ก่อน)
 // ==========================================================
- const strapiUrl = 'https://api.vertexplus99.com';
+ const strapiUrl = 'http://localhost:1337';
 // --- ฟังก์ชันใหม่สำหรับโหลด "บริการของเรา" ---
     function loadMainServices() {
         const servicesApiUrl = `${strapiUrl}/api/services?populate=*&sort=displayOrder:asc`;
@@ -283,6 +283,25 @@ function loadUserProfile() {
     } else {
         profileContainer.innerHTML = '<p>ไม่พบข้อมูลผู้ใช้</p>';
     }
+}
+
+function fetchUserOrders() {
+    const token = localStorage.getItem('jwt');
+    if (!token) return; // ถ้าไม่มี token ก็ไม่ต้องทำ
+
+    // แก้ไข URL ให้ชี้ไปที่ API เส้นใหม่ของเรา
+    const ordersApiUrl = `${strapiUrl}/api/orders/me`;
+
+    fetch(ordersApiUrl, {
+        headers: {
+            'Authorization': `Bearer ${token}` // ส่งบัตรผ่าน (JWT) ไปด้วย
+        }
+    })
+    .then(response => response.json())
+    .then(response => {
+        // ... นำข้อมูลไปแสดงผลในหน้าโปรไฟล์ ...
+        console.log("ออเดอร์ของฉัน:", response.data);
+    });
 }
 
 // ==========================================================
