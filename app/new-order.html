@@ -1,26 +1,32 @@
 <main>
     <section class="order-page-section">
         <div class="container order-container">
-            <h2>ยืนยันการขอรับบริการ</h2>
-            <p class="section-subtitle">กรุณาตรวจสอบข้อมูลและเพิ่มรายละเอียดก่อนส่งคำขอ</p>
-
-            <div id="selected-package-summary" class="package-summary">
-                <p>กำลังโหลดข้อมูลแพ็กเกจ...</p>
-            </div>
+            <h2>สร้างคำขอรับบริการ / จองคิว</h2>
+            <p class="section-subtitle">กรุณาเลือกแพ็กเกจที่สนใจและกรอกข้อมูลติดต่อให้ครบถ้วน</p>
 
             <form id="new-order-form" class="auth-form">
-                <h3>ข้อมูลติดต่อของคุณ</h3>
+                
                 <div class="form-group">
-                    <label>ชื่อ-นามสกุล</label>
-                    <input type="text" id="order-fullname" readonly>
+                    <label for="order-package-select">เลือกแพ็กเกจที่ท่านสนใจ</label>
+                    <select id="order-package-select" name="selectedPackage" required>
+                        <option value="">-- กรุณาเลือกแพ็กเกจ --</option>
+                        </select>
+                </div>
+
+                <hr>
+
+                <h3>ข้อมูลติดต่อสำหรับงานนี้</h3>
+                <div class="form-group">
+                    <label for="order-contact-name">ชื่อผู้ติดต่อหน้างาน</label>
+                    <input type="text" id="order-contact-name" name="contactName" required>
                 </div>
                 <div class="form-group">
-                    <label>ที่อยู่สำหรับติดตั้ง</label>
-                    <textarea id="order-address" rows="3" readonly></textarea>
+                    <label for="order-install-address">ที่อยู่สำหรับติดตั้ง</label>
+                    <textarea id="order-install-address" name="installationAddress" rows="3" required></textarea>
                 </div>
                  <div class="form-group">
-                    <label>เบอร์โทรศัพท์</label>
-                    <input type="tel" id="order-phone" readonly>
+                    <label for="order-contact-phone">เบอร์โทรศัพท์ติดต่อ</label>
+                    <input type="tel" id="order-contact-phone" name="contactPhone" required>
                 </div>
 
                 <hr>
@@ -29,7 +35,7 @@
                     <label for="order-notes">รายละเอียดเพิ่มเติม (ถ้ามี)</label>
                     <textarea id="order-notes" name="customerNotes" rows="4" placeholder="เช่น ลักษณะหลังคา, เวลาที่สะดวกให้ติดต่อกลับ"></textarea>
                 </div>
-
+                
                 <div class="form-feedback" id="order-feedback"></div>
 
                 <button type="submit" class="btn btn-primary">ยืนยันการสร้างคิว</button>
