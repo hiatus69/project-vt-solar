@@ -674,7 +674,7 @@ footer a:hover { text-decoration: underline; }
 
 .profile-data-grid {
     display: grid;
-    grid-template-columns: 1fr 2fr;
+    grid-template-columns: auto 1fr; /* ปรับให้คอลัมน์แรกกว้างตามเนื้อหา */
     gap: 1rem 2rem;
     padding: 2rem;
     background-color: #f1f1f1;
@@ -688,9 +688,21 @@ footer a:hover { text-decoration: underline; }
     color: #555;
 }
 
+.profile-actions {
+    display: flex;
+    justify-content: center;
+    gap: 1rem;
+    margin-bottom: 3rem;
+}
+
+.btn-danger {
+    background-color: #dc3545;
+    color: white;
+}
+
 .profile-container h3 {
     text-align: center;
-    margin-top: 3rem;
+    margin-top: 2rem;
     margin-bottom: 1.5rem;
 }
 
@@ -699,14 +711,10 @@ footer a:hover { text-decoration: underline; }
     color: #777;
 }
 
-#logout-button {
-    background-color: #dc3545; /* สีแดง */
-    color: white;
-    padding: 0.5rem 1rem;
-    border-radius: 5px;
-    text-decoration: none;
-    font-weight: bold;
+#logout-button.nav-link {
+    border-bottom-color: transparent; /* เอาเส้นใต้ของ nav-link ออก */
 }
+
 
 .dashboard-page-section {
     padding: 4rem 0;
