@@ -1,213 +1,214 @@
 // ==========================================================
-// ส่วนที่ 1: ฟังก์ชันสำหรับดึงข้อมูลจาก Strapi (นิยามไว้ก่อน)
+// ส่วนที่ 1: ฟังก์ชันสำหรับดึงข้อมูลและจัดการ (นิยามไว้ก่อน)
 // ==========================================================
- const strapiUrl = 'http://localhost:1337';
-// --- ฟังก์ชันใหม่สำหรับโหลด "บริการของเรา" ---
-    function loadMainServices() {
-        const servicesApiUrl = `${strapiUrl}/api/services?populate=*&sort=displayOrder:asc`;
-        const servicesGrid = document.querySelector('#services .promo-grid');
+const strapiUrl = 'http://localhost:1337';
 
-        if (!servicesGrid) return;
-
-        fetch(servicesApiUrl)
-            .then(response => response.json())
-            .then(response => {
-                const services = response.data;
-                servicesGrid.innerHTML = '';
-
-                if (!services || services.length === 0) {
-                    servicesGrid.innerHTML = '<p>ยังไม่มีบริการในขณะนี้</p>';
-                    return;
-                }
-
-                services.forEach(service => {
-                    const item = service.attributes || service;
-
-                    let imageUrl = 'https://placehold.co/600x400/cccccc/333?text=Service';
-                    if (item.serviceImage && item.serviceImage.data) {
-                        imageUrl = `${strapiUrl}${item.serviceImage.data.attributes.url}`;
-                    } else if (item.serviceImage && item.serviceImage.url) {
-                        imageUrl = `${strapiUrl}${item.serviceImage.url}`;
-                    }
-
-                    // เรียกใช้ฟังก์ชัน renderFeatures สำหรับส่วนบริการ
-                    const featuresHTML = renderFeatures(item.features);
-
-                    // --- จุดที่แก้ไขสำคัญ: โครงสร้าง HTML ใหม่ให้เหมือนกับโปรโมชั่น ---
-                    const cardHTML = `
-                        <div class="promo-card">
-                            <div class="promo-card-header">
-                                <img src="${imageUrl}" alt="${item.serviceName || 'บริการ'}">
-                            </div>
-                            <div class="promo-card-body">
-                                <h3>${item.serviceName}</h3>
-                                <p class="promo-description">${item.description}</p>
-                                <div class="promo-price">
-                                    <span class="price-label">ราคาปกติ</span>
-                                    <span class="price-amount">${(item.price || 0).toLocaleString('en-US')}</span>
-                                    <span class="price-unit">บาท</span>
-                                </div>
-                                ${featuresHTML}
-                            </div>
-                            <div class="promo-card-footer">
-                                <a href="contact.html" class="btn btn-secondary">สนใจบริการนี้</a>
-                            </div>
-                        </div>
-                    `;
-                    // --- จบจุดที่แก้ไข ---
-
-                    servicesGrid.innerHTML += cardHTML;
-                });
-            })
-            .catch(error => {
-                console.error('Error fetching services:', error);
-                servicesGrid.innerHTML = '<p>ไม่สามารถโหลดข้อมูลบริการได้</p>';
-            });
+// --- ฟังก์ชันใหม่: สำหรับ "แปล" สถานะเป็นภาษาไทย ---
+function translateStatus(status) {
+    switch (status) {
+        case 'Waiting_in_queue':
+            return 'รอการติดต่อ';
+        case 'Accepting_order':
+            return 'ยืนยันนัดหมาย';
+        case 'Installing':
+            return 'กำลังติดตั้ง';
+        case 'Completed':
+            return 'เสร็จสิ้น';
+        case 'Cancel':
+            return 'ยกเลิก';
+        default:
+            return status; // ถ้าเจอสถานะที่ไม่รู้จัก ก็ให้แสดงเป็นภาษาอังกฤษไปก่อน
     }
+}
 
-
-    // --- ฟังก์ชันสำหรับโหลด "โปรโมชั่นสุดพิเศษ" ---
-    function loadSpecialPromotions() {
-        const promoApiUrl = `${strapiUrl}/api/promotions?populate=*&sort=displayOrder:asc`;
-        const promoGrid = document.querySelector('#special-promotions-container');
-
-        if (!promoGrid) return;
-
-        fetch(promoApiUrl)
-            .then(response => response.json())
-            .then(response => {
-                const promotions = response.data;
-                promoGrid.innerHTML = '';
-
-                if (!promotions || promotions.length === 0) {
-                    promoGrid.innerHTML = '<p>ยังไม่มีโปรโมชั่นในขณะนี้</p>';
-                    return;
+// --- ฟังก์ชันสำหรับแปลง Rich Text (ใช้ร่วมกัน) ---
+function renderFeatures(featuresArray) {
+    if (!featuresArray) return '';
+    let featuresHtml = '<ul class="promo-features">';
+    featuresArray.forEach(featureItem => {
+        if (featureItem.type === 'paragraph') {
+            featureItem.children.forEach(child => {
+                if (child.type === 'text') {
+                    featuresHtml += `<li>${child.text}</li>`;
                 }
-
-                promotions.forEach(promotion => {
-                    const item = promotion.attributes || promotion;
-
-                    let imageUrl = 'https://placehold.co/600x400/cccccc/333?text=No+Image';
-                    if (item.promoImage && item.promoImage.data) {
-                        imageUrl = `${strapiUrl}${item.promoImage.data.attributes.url}`;
-                    } else if (item.promoImage && item.promoImage.url) {
-                         imageUrl = `${strapiUrl}${item.promoImage.url}`;
-                    }
-
-                    const featuresHTML = renderFeatures(item.features);
-
-                    const cardHTML = `
-                        <div class="promotion-card">
-                            <div class="promo-card-header">
-                                <img src="${imageUrl}" alt="ภาพโปรโมชั่น ${item.packageName || ''}">
-                            </div>
-                            <div class="promo-card-body">
-                                <h3>${item.packageName}</h3>
-                                <p class="promo-description">${item.description}</p>
-                                <div class="promo-price">
-                                    <span class="price-label">เริ่มต้นเพียง</span>
-                                    <span class="price-amount">${(item.price || 0).toLocaleString('en-US')}</span>
-                                    <span class="price-unit">บาท</span>
-                                </div>
-                                ${featuresHTML}
-                            </div>
-                            <div class="promo-card-footer">
-                                <a href="contact.html" class="btn btn-secondary">สนใจแพ็กเกจนี้</a>
-                            </div>
-                        </div>
-                    `;
-                    promoGrid.innerHTML += cardHTML;
-                });
-            })
-            .catch(error => {
-                console.error('Error fetching promotions:', error);
-                promoGrid.innerHTML = `<p>เกิดข้อผิดพลาดในการโหลดข้อมูลโปรโมชั่น</p>`;
             });
-    }
+        }
+    });
+    featuresHtml += '</ul>';
+    return featuresHtml;
+}
 
-    // --- ฟังก์ชันสำหรับแปลง Rich Text (ใช้ร่วมกัน) ---
-    function renderFeatures(featuresArray) {
-        if (!featuresArray) return '';
-        let featuresHtml = '<ul class="promo-features">';
-        featuresArray.forEach(featureItem => {
-            if (featureItem.type === 'paragraph') {
-                featureItem.children.forEach(child => {
-                    if (child.type === 'text') {
-                        featuresHtml += `<li>${child.text}</li>`;
-                    }
-                });
+// --- ฟังก์ชันสำหรับโหลด "บริการของเรา" ---
+function loadMainServices() {
+    const servicesGrid = document.querySelector('#services .promo-grid');
+    if (!servicesGrid) return;
+
+    const servicesApiUrl = `${strapiUrl}/api/services?populate=*&sort=displayOrder:asc`;
+    fetch(servicesApiUrl)
+        .then(response => response.json())
+        .then(response => {
+            const services = response.data;
+            servicesGrid.innerHTML = '';
+            if (!services || services.length === 0) {
+                servicesGrid.innerHTML = '<p>ยังไม่มีบริการในขณะนี้</p>';
+                return;
             }
+            services.forEach(service => {
+                const item = service.attributes || service;
+                let imageUrl = 'https://placehold.co/600x400/cccccc/333?text=Service';
+                if (item.serviceImage && item.serviceImage.data) {
+                    imageUrl = `${strapiUrl}${item.serviceImage.data.attributes.url}`;
+                } else if (item.serviceImage && item.serviceImage.url) {
+                    imageUrl = `${strapiUrl}${item.serviceImage.url}`;
+                }
+                const featuresHTML = renderFeatures(item.features);
+                const cardHTML = `
+                    <div class="promo-card">
+                        <div class="promo-card-header">
+                            <img src="${imageUrl}" alt="${item.serviceName || 'บริการ'}">
+                        </div>
+                        <div class="promo-card-body">
+                            <h3>${item.serviceName}</h3>
+                            <p class="promo-description">${item.description}</p>
+                            <div class="promo-price">
+                                <span class="price-label">ราคาปกติ</span>
+                                <span class="price-amount">${(item.price || 0).toLocaleString('en-US')}</span>
+                                <span class="price-unit">บาท</span>
+                            </div>
+                            ${featuresHTML}
+                        </div>
+                        <div class="promo-card-footer">
+                            <a href="contact.html" class="btn btn-secondary nav-link">สนใจบริการนี้</a>
+                        </div>
+                    </div>
+                `;
+                servicesGrid.innerHTML += cardHTML;
+            });
         });
-        featuresHtml += '</ul>';
-        return featuresHtml;
-    }
+}
 
-    // --- เรียกใช้งานฟังก์ชันทั้งหมดเมื่อหน้าเว็บโหลด ---
-    loadMainServices();
-    loadSpecialPromotions();
+// --- ฟังก์ชันสำหรับโหลด "โปรโมชั่นสุดพิเศษ" ---
+function loadSpecialPromotions() {
+    const promoGrid = document.querySelector('#special-promotions-container');
+    if (!promoGrid) return;
 
-// --- ฟังก์ชันสำหรับจัดการการสมัครสมาชิก ---
+    const promoApiUrl = `${strapiUrl}/api/promotions?populate=*&sort=displayOrder:asc`;
+    fetch(promoApiUrl)
+        .then(response => response.json())
+        .then(response => {
+            const promotions = response.data;
+            promoGrid.innerHTML = '';
+            if (!promotions || promotions.length === 0) {
+                promoGrid.innerHTML = '<p>ยังไม่มีโปรโมชั่นในขณะนี้</p>';
+                return;
+            }
+            promotions.forEach(promotion => {
+                const item = promotion.attributes || promotion;
+                let imageUrl = 'https://placehold.co/600x400/cccccc/333?text=No+Image';
+                if (item.promoImage && item.promoImage.data) {
+                    imageUrl = `${strapiUrl}${item.promoImage.data.attributes.url}`;
+                } else if (item.promoImage && item.promoImage.url) {
+                     imageUrl = `${strapiUrl}${item.promoImage.url}`;
+                }
+                const featuresHTML = renderFeatures(item.features);
+                const cardHTML = `
+                    <div class="promotion-card">
+                        <div class="promo-card-header">
+                            <img src="${imageUrl}" alt="ภาพโปรโมชั่น ${item.packageName || ''}">
+                        </div>
+                        <div class="promo-card-body">
+                            <h3>${item.packageName}</h3>
+                            <p class="promo-description">${item.description}</p>
+                            <div class="promo-price">
+                                <span class="price-label">เริ่มต้นเพียง</span>
+                                <span class="price-amount">${(item.price || 0).toLocaleString('en-US')}</span>
+                                <span class="price-unit">บาท</span>
+                            </div>
+                            ${featuresHTML}
+                        </div>
+                        <div class="promo-card-footer">
+                            <a href="contact.html" class="btn btn-secondary nav-link">สนใจแพ็กเกจนี้</a>
+                        </div>
+                    </div>
+                `;
+                promoGrid.innerHTML += cardHTML;
+            });
+        });
+}
+
+// --- ฟังก์ชันสำหรับจัดการการสมัครสมาชิก (เวอร์ชันแก้ไขใหม่) ---
 function handleRegistration() {
     const registerForm = document.getElementById('register-form');
-    if (!registerForm) return; // ถ้าไม่เจอฟอร์มนี้ ก็ไม่ต้องทำอะไร
+    if (!registerForm) return;
 
     const feedbackDiv = document.getElementById('register-feedback');
 
-    registerForm.addEventListener('submit', (event) => {
-        event.preventDefault(); // หยุดการส่งฟอร์มแบบปกติ
+    registerForm.addEventListener('submit', async (event) => {
+        event.preventDefault();
+        feedbackDiv.className = 'form-feedback';
+        feedbackDiv.textContent = 'กำลังดำเนินการ...';
+        feedbackDiv.style.display = 'block';
 
-        // ดึงข้อมูลจากฟอร์ม
-        const firstname = document.getElementById('reg-firstname').value;
-        const lastname = document.getElementById('reg-lastname').value;
-        const address = document.getElementById('reg-address').value;
-        const phone = document.getElementById('reg-phone').value;
-        const email = document.getElementById('reg-email').value;
-        const password = document.getElementById('reg-password').value;
+        const formData = new FormData(registerForm);
+        const data = Object.fromEntries(formData.entries());
 
-        // เตรียมข้อมูลเพื่อส่งไปที่ Strapi
-        const registrationData = {
-            username: email, // Strapi ใช้ username เป็นค่า unique, เราจะใช้อีเมลแทน
-            email: email,
-            password: password,
-            firstname: firstname,
-            lastname: lastname,
-            address: address,
-            phone_number: phone
-        };
+        try {
+            // ---- ขั้นตอนที่ 1: สมัครสมาชิกด้วยข้อมูลพื้นฐาน ----
+            const registerResponse = await fetch(`${strapiUrl}/api/auth/local/register`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    username: data.email,
+                    email: data.email,
+                    password: data.password,
+                }),
+            });
 
-        // ส่งข้อมูลไปที่ API สำหรับการลงทะเบียนของ Strapi
-        fetch(`${strapiUrl}/api/auth/local/register`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify(registrationData),
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.error) {
-                // ถ้า Strapi ส่ง error กลับมา
-                feedbackDiv.textContent = data.error.message;
-                feedbackDiv.className = 'form-feedback error';
-            } else {
-                // ถ้าสำเร็จ
-                feedbackDiv.textContent = 'สมัครสมาชิกสำเร็จ! กำลังนำคุณไปยังหน้าเข้าสู่ระบบ...';
-                feedbackDiv.className = 'form-feedback success';
+            const registerData = await registerResponse.json();
 
-                // รอ 2 วินาที แล้วค่อยพาไปหน้า login
-                setTimeout(() => {
-                    // ใช้ฟังก์ชัน loadContent ของเราเพื่อเปลี่ยนหน้า
-                    loadContent('login.html');
-                }, 2000);
+            if (registerData.error) {
+                // ถ้าการสมัครพื้นฐานล้มเหลว (เช่น อีเมลซ้ำ)
+                throw new Error(registerData.error.message);
             }
-        })
-        .catch(error => {
+
+            // ---- ขั้นตอนที่ 2: อัปเดตโปรไฟล์ด้วยข้อมูลที่เหลือ ----
+            const { jwt, user } = registerData;
+            
+            const updateUserResponse = await fetch(`${strapiUrl}/api/users/${user.id}`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${jwt}`, // ใช้ "บัตรผ่าน" ที่เพิ่งได้มา
+                },
+                body: JSON.stringify({
+                    firstname: data.firstname,
+                    lastname: data.lastname,
+                    address: data.address,
+                    phone_number: data.phone,
+                }),
+            });
+
+            if (!updateUserResponse.ok) {
+                 const updateError = await updateUserResponse.json();
+                 throw new Error(updateError.error.message || 'สร้างบัญชีสำเร็จ แต่ไม่สามารถอัปเดตข้อมูลโปรไฟล์ได้');
+            }
+
+            // ---- ถ้าทุกอย่างสำเร็จ ----
+            feedbackDiv.textContent = 'สมัครสมาชิกสำเร็จ! กรุณาเข้าสู่ระบบ';
+            feedbackDiv.className = 'form-feedback success';
+            setTimeout(() => { 
+            
+                window.location.href = loadContent('login.html');
+            }, 2000);
+
+        } catch (error) {
             console.error('Registration error:', error);
-            feedbackDiv.textContent = 'เกิดข้อผิดพลาดในการเชื่อมต่อ กรุณาลองใหม่อีกครั้ง';
+            feedbackDiv.textContent = error.message || 'เกิดข้อผิดพลาดในการสมัคร';
             feedbackDiv.className = 'form-feedback error';
-        });
+        }
     });
 }
+
 
 // --- ฟังก์ชันสำหรับจัดการการเข้าสู่ระบบ ---
 function handleLogin() {
@@ -218,19 +219,15 @@ function handleLogin() {
 
     loginForm.addEventListener('submit', (event) => {
         event.preventDefault();
+        const formData = new FormData(loginForm);
+        const data = Object.fromEntries(formData.entries());
 
-        const email = document.getElementById('login-email').value;
-        const password = document.getElementById('login-password').value;
-
-        // ส่งข้อมูลไปที่ API สำหรับการล็อกอินของ Strapi
         fetch(`${strapiUrl}/api/auth/local`, {
             method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
+            headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
-                identifier: email, // Strapi ใช้ identifier สำหรับ email/username
-                password: password,
+                identifier: data.email,
+                password: data.password,
             }),
         })
         .then(response => response.json())
@@ -238,31 +235,22 @@ function handleLogin() {
             if (data.error) {
                 feedbackDiv.textContent = 'อีเมลหรือรหัสผ่านไม่ถูกต้อง';
                 feedbackDiv.className = 'form-feedback error';
+                feedbackDiv.style.display = 'block';
             } else {
-                // ถ้าล็อกอินสำเร็จ
-                // 1. เก็บ "บัตรผ่าน" (JWT) และข้อมูลผู้ใช้ไว้ในเบราว์เซอร์
                 localStorage.setItem('jwt', data.jwt);
                 localStorage.setItem('user', JSON.stringify(data.user));
-
-                feedbackDiv.textContent = 'เข้าสู่ระบบสำเร็จ!';
-                feedbackDiv.className = 'form-feedback success';
-
-                // 2. โหลดหน้าเว็บใหม่ทั้งหมดเพื่ออัปเดตสถานะการล็อกอิน
-                // ในอนาคตเราจะเปลี่ยนเป็นการพาไปหน้าโปรไฟล์
-                setTimeout(() => {
-                    window.location.href = 'index.html';
-                }, 1000);
+                window.location.href = 'index.html'; // โหลดหน้าใหม่เพื่อให้สถานะล็อกอินอัปเดตทั้งหมด
             }
         })
         .catch(error => {
-            console.error('Login error:', error);
-            feedbackDiv.textContent = 'เกิดข้อผิดพลาดในการเชื่อมต่อ กรุณาลองใหม่อีกครั้ง';
+            feedbackDiv.textContent = 'เกิดข้อผิดพลาดในการเชื่อมต่อ';
             feedbackDiv.className = 'form-feedback error';
+            feedbackDiv.style.display = 'block';
         });
     });
 }
 
-// --- ฟังก์ชันใหม่: สำหรับแสดงข้อมูลผู้ใช้ในหน้าโปรไฟล์ ---
+// --- ฟังก์ชันสำหรับแสดงข้อมูลผู้ใช้ในหน้าโปรไฟล์ ---
 function loadUserProfile() {
     const profileContainer = document.getElementById('user-profile-data');
     if (!profileContainer) return;
@@ -280,86 +268,231 @@ function loadUserProfile() {
             <span class="label">เบอร์โทรศัพท์:</span>
             <span>${user.phone_number || 'ยังไม่ได้ระบุ'}</span>
         `;
-    } else {
-        profileContainer.innerHTML = '<p>ไม่พบข้อมูลผู้ใช้</p>';
     }
 }
 
-function fetchUserOrders() {
+// --- ฟังก์ชันใหม่: สำหรับจัดการหน้าสร้างออเดอร์ ---
+function handleNewOrderPage() {
+    const user = JSON.parse(localStorage.getItem('user'));
     const token = localStorage.getItem('jwt');
-    if (!token) return; // ถ้าไม่มี token ก็ไม่ต้องทำ
+    const orderForm = document.getElementById('new-order-form');
+    const packageSelect = document.getElementById('order-package-select');
 
-    // แก้ไข URL ให้ชี้ไปที่ API เส้นใหม่ของเรา
+    if (!orderForm || !user || !token) {
+        alert('เกิดข้อผิดพลาด: กรุณาเข้าสู่ระบบก่อน');
+        window.location.hash = 'login.html';
+        return;
+    }
+
+    // 1. ดึงข้อมูล Service ทั้งหมดมาใส่ใน Dropdown
+    let allServices = []; // สร้างตัวแปรสำหรับเก็บข้อมูล service ทั้งหมด
+    fetch(`${strapiUrl}/api/services`)
+        .then(res => res.json())
+        .then(response => {
+            allServices = response.data;
+            packageSelect.innerHTML = '<option value="">-- กรุณาเลือกแพ็กเกจ --</option>'; // เคลียร์ของเก่า
+            allServices.forEach(service => {
+                const item = service.attributes || service;
+                const option = document.createElement('option');
+                option.value = service.id; // เก็บ ID ของ service ไว้
+                option.textContent = `${item.serviceName} - ${item.price.toLocaleString('en-US')} บาท`;
+                packageSelect.appendChild(option);
+            });
+        });
+
+    // 2. ดึงข้อมูลลูกค้ามาใส่ในฟอร์มเป็นค่าเริ่มต้น
+    document.getElementById('order-contact-name').value = `${user.firstname || ''} ${user.lastname || ''}`;
+    document.getElementById('order-install-address').value = user.address || '';
+    document.getElementById('order-contact-phone').value = user.phone_number || '';
+    
+    // 3. จัดการการ submit ฟอร์ม
+    orderForm.addEventListener('submit', async (event) => {
+        event.preventDefault();
+        const feedbackDiv = document.getElementById('order-feedback');
+        feedbackDiv.className = 'form-feedback';
+        feedbackDiv.textContent = 'กำลังส่งคำขอ...';
+        feedbackDiv.style.display = 'block';
+
+        const selectedServiceId = packageSelect.value;
+        if (!selectedServiceId) {
+            feedbackDiv.textContent = 'กรุณาเลือกแพ็กเกจที่สนใจ';
+            feedbackDiv.className = 'form-feedback error';
+            return;
+        }
+
+        // หาข้อมูล service ที่ถูกเลือกจาก list ที่เราเก็บไว้
+        const selectedService = allServices.find(s => s.id == selectedServiceId);
+        const serviceAttributes = selectedService.attributes || selectedService;
+        
+        // ดึงข้อมูลล่าสุดจากฟอร์ม
+        const contactName = document.getElementById('order-contact-name').value;
+        const installationAddress = document.getElementById('order-install-address').value;
+        const contactPhone = document.getElementById('order-contact-phone').value;
+        const customerNotes = document.getElementById('order-notes').value;
+        
+        try {
+    // ---- ไม่ต้องสร้าง Order Item ที่นี่แล้ว ----
+
+    // ---- สร้าง Order หลัก โดยส่งข้อมูลทั้งหมดไปให้ Controller ใหม่ของเรา ----
+    const orderResponse = await fetch(`${strapiUrl}/api/orders`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({
+            data: {
+                // ส่งข้อมูลแพ็กเกจที่เลือกไปเป็นก้อนเดียว
+                orderItemData: {
+                    packageName: serviceAttributes.serviceName,
+                    price: serviceAttributes.price,
+                    features: serviceAttributes.features
+                },
+                // ส่งข้อมูลติดต่อที่กรอกไปเป็นอีกก้อน
+                contactInfo: {
+                    contactName: contactName,
+                    installationAddress: installationAddress,
+                    contactPhone: contactPhone,
+                    customerNotes: customerNotes
+                }
+            }
+        })
+    });
+
+            const orderData = await orderResponse.json();
+            if (orderData.error) throw new Error(orderData.error.message);
+            
+            feedbackDiv.textContent = 'ส่งคำขอของคุณเรียบร้อยแล้ว!';
+            feedbackDiv.className = 'form-feedback success';
+
+            setTimeout(() => {
+                window.location.hash = 'profile.html';
+            }, 3000);
+
+        } catch (error) {
+            feedbackDiv.textContent = `เกิดข้อผิดพลาด: ${error.message}`;
+            feedbackDiv.className = 'form-feedback error';
+        }
+    });
+}
+
+// --- ฟังก์ชันสำหรับดึงประวัติออเดอร์ของลูกค้า (เวอร์ชันอัปเดต) ---
+function loadUserOrders() {
+    const ordersContainer = document.getElementById('user-orders-list');
+    if (!ordersContainer) return;
+
+    const token = localStorage.getItem('jwt');
+    if (!token) {
+        ordersContainer.innerHTML = '<p>กรุณาเข้าสู่ระบบเพื่อดูประวัติการสั่งซื้อ</p>';
+        return;
+    }
+
     const ordersApiUrl = `${strapiUrl}/api/orders/me`;
 
     fetch(ordersApiUrl, {
-        headers: {
-            'Authorization': `Bearer ${token}` // ส่งบัตรผ่าน (JWT) ไปด้วย
-        }
+        headers: { 'Authorization': `Bearer ${token}` }
     })
     .then(response => response.json())
     .then(response => {
-        // ... นำข้อมูลไปแสดงผลในหน้าโปรไฟล์ ...
-        console.log("ออเดอร์ของฉัน:", response.data);
+        if (response.error) throw new Error(response.error.message);
+
+        const orders = response.data;
+        ordersContainer.innerHTML = '';
+
+        if (orders.length === 0) {
+            ordersContainer.innerHTML = '<p>ยังไม่มีประวัติการสั่งซื้อ</p>';
+            return;
+        }
+        
+        let ordersHTML = '<ul>';
+        orders.forEach(order => {
+            const item = order.attributes || order;
+            
+            // --- จุดที่แก้ไข ---
+            // เรียกใช้ฟังก์ชัน translateStatus() ที่นี่
+            const thaiStatus = translateStatus(item.status);
+            
+            ordersHTML += `<li>วันที่: ${new Date(item.createdAt).toLocaleDateString('th-TH')} - สถานะ: <strong>${thaiStatus}</strong></li>`;
+        });
+        ordersHTML += '</ul>';
+        
+        ordersContainer.innerHTML = ordersHTML;
+    })
+    .catch(error => {
+        console.error('Error fetching user orders:', error);
+        ordersContainer.innerHTML = '<p>เกิดข้อผิดพลาดในการโหลดข้อมูลออเดอร์</p>';
     });
 }
 
 // ==========================================================
-// ส่วนที่ 2: โค้ดสำหรับเปลี่ยนหน้า (SPA Logic) - ทำงานแค่ครั้งเดียว
+// ส่วนที่ 2: โค้ดสำหรับควบคุมหน้าเว็บทั้งหมด (SPA Logic)
 // ==========================================================
 document.addEventListener('DOMContentLoaded', () => {
-
+    
     const contentContainer = document.getElementById('app-content');
+    const footerContainer = document.getElementById('page-footer');
     const navLinksContainer = document.querySelector('.nav-links');
 
-     // --- ฟังก์ชันใหม่: สำหรับอัปเดตเมนูตามสถานะล็อกอิน ---
+    // --- ฟังก์ชันสำหรับอัปเดตเมนูตามสถานะล็อกอิน ---
     function updateNavbar() {
-        const user = localStorage.getItem('user');
-
-        if (user) {
-            // ถ้าล็อกอินแล้ว
+        const userString = localStorage.getItem('user');
+        if (!userString) {
             navLinksContainer.innerHTML = `
                 <a href="home-content.html" class="nav-link">หน้าหลัก</a>
-                <a href="profile.html" class="nav-link">โปรไฟล์</a>
-                <a href="#" id="logout-button" class="nav-link">ออกจากระบบ</a>
-            `;
-        } else {
-            // ถ้ายังไม่ล็อกอิน
-            navLinksContainer.innerHTML = `
-                <a href="home-content.html" class="nav-link active">หน้าหลัก</a>
                 <a href="about.html" class="nav-link">เกี่ยวกับเรา</a>
                 <a href="contact.html" class="nav-link">ติดต่อเรา</a>
+                <a href="register.html" class="nav-link">สมัครสมาชิก</a>
                 <a href="login.html" class="nav-link">เข้าสู่ระบบ</a>
             `;
+            return;
         }
+
+        const user = JSON.parse(userString);
+        // สมมติว่าเรายังไม่มี role employee ในตอนนี้
+        navLinksContainer.innerHTML = `
+            <a href="home-content.html" class="nav-link">หน้าหลัก</a>
+            <a href="about.html" class="nav-link">เกี่ยวกับเรา</a>
+            <a href="contact.html" class="nav-link">ติดต่อเรา</a>
+            <a href="profile.html" class="nav-link">โปรไฟล์</a>
+            <a href="#" id="logout-button" class="nav-link">ออกจากระบบ</a>
+        `;
     }
-
-    // ฟังก์ชันสำหรับโหลดเนื้อหาหน้าเว็บ
+    
+    // --- ฟังก์ชันหลักสำหรับโหลดเนื้อหา ---
     const loadContent = (url) => {
-        // ก่อนโหลดเนื้อหาใหม่ ให้แสดงสถานะกำลังโหลด (ถ้าต้องการ)
-        contentContainer.innerHTML = '<h2>กำลังโหลดเนื้อหา...</h2>';
+        const page = url.split('#')[0];
+        const id = url.split('#')[1];
 
-        fetch(url)
+        contentContainer.innerHTML = '<h2>กำลังโหลดเนื้อหา...</h2>';
+        footerContainer.innerHTML = '';
+        
+        fetch(page)
             .then(response => {
-                if (!response.ok) throw new Error('Network response was not ok.');
+                if (!response.ok) throw new Error('ไม่สามารถโหลดไฟล์เนื้อหาได้');
                 return response.text();
             })
-            .then(html => {
-                contentContainer.innerHTML = html;
+            .then(htmlString => {
+                const parser = new DOMParser();
+                const doc = parser.parseFromString(htmlString, 'text/html');
+                const mainContent = doc.querySelector('main');
+                const footerContent = doc.querySelector('footer');
 
-                // หลังจากวางโครงสร้างหน้าเสร็จแล้ว ให้เรียกฟังก์ชันเพื่อดึงข้อมูลมาใส่
-                if (url.includes('home-content.html')) {
+                contentContainer.innerHTML = mainContent ? mainContent.innerHTML : 'เนื้อหาไม่ถูกต้อง';
+                footerContainer.innerHTML = footerContent ? footerContent.innerHTML : '';
+                
+                // เรียกใช้ฟังก์ชันที่จำเป็นสำหรับหน้านั้นๆ
+                if (page.includes('home-content.html')) {
                     loadMainServices();
                     loadSpecialPromotions();
+                } else if (page.includes('register.html')) {
+                    handleRegistration();
+                } else if (page.includes('login.html')) {
+                    handleLogin();
+                } else if (page.includes('profile.html')) {
+                    loadUserProfile();
                 }
-                else if (url.includes('register.html')) {
-                    handleRegistration(); // <-- เรียกใช้ฟังก์ชันสมัครสมาชิกที่นี่
-                }
-                else if (url.includes('login.html')) {
-                    handleLogin(); // <-- เรียกใช้ฟังก์ชันล็อกอินที่นี่
-                }
-                else if (url.includes('profile.html')) {
-                    loadUserProfile(); // <-- เรียกใช้ฟังก์ชันโหลดโปรไฟล์ที่นี่
+                  else if (url.includes('new-order.html')) {
+                    handleNewOrderPage();
                 }
             })
             .catch(error => {
@@ -368,55 +501,42 @@ document.addEventListener('DOMContentLoaded', () => {
             });
     };
 
-    // โหลดเนื้อหาหน้าแรกเมื่อเปิดเว็บครั้งแรก
-    loadContent('home-content.html');
-
-    // เพิ่ม Event Listener ให้กับทุกๆ ลิงก์ในเมนู (ใช้ Event Delegation)
+    // --- Event Listeners ---
     document.body.addEventListener('click', (event) => {
-        // ตรวจสอบว่าสิ่งที่คลิกคือ .nav-link หรือไม่
-        if (event.target.matches('.nav-link')) {
-            event.preventDefault();
-            const href = event.target.getAttribute('href');
-
-            // ไม่โหลดซ้ำถ้าคลิกหน้าเดิม
-            if(window.location.hash === `#${href}`) return;
-
-            loadContent(href);
-
-            // อัปเดต active class ที่เมนู
-            document.querySelectorAll('.nav-link').forEach(item => item.classList.remove('active'));
-            // หาเมนูที่ตรงกับ href แล้วเพิ่ม active class
-            document.querySelector(`.nav-link[href='${href}']`).classList.add('active');
-
-            // (ทางเลือก) อัปเดต URL hash เพื่อให้ปุ่ม back/forward ทำงานได้
-            window.location.hash = href;
-        // จัดการการคลิกที่ลิงก์ในเมนู
-        if (link && !event.target.matches('#logout-button')) {
+        const link = event.target.closest('.nav-link');
+        
+        if (link && !link.id.includes('logout-button')) {
             event.preventDefault();
             const href = link.getAttribute('href');
-            loadContent(href);
-            // ... (โค้ดอัปเดต active class)
+            window.location.hash = href;
         }
 
-        // จัดการการคลิกที่ปุ่มออกจากระบบ
         if (event.target.matches('#logout-button')) {
             event.preventDefault();
             localStorage.removeItem('jwt');
             localStorage.removeItem('user');
             alert('ออกจากระบบสำเร็จ!');
-            window.location.href = 'index.html'; // โหลดหน้าเว็บใหม่ทั้งหมด
-        }
-      }
-    });
-
-    // (ทางเลือก) ทำให้ปุ่ม back/forward ของเบราว์เซอร์ทำงานได้
-    window.addEventListener('popstate', () => {
-        const hash = window.location.hash.substring(1);
-        if (hash) {
-            loadContent(hash);
-        } else {
-            loadContent('home-content.html');
+            window.location.href = 'index.html';
         }
     });
 
+    // ทำให้ปุ่ม back/forward และการเข้าเว็บด้วย URL hash ทำงานได้
+    const handleHashChange = () => {
+        let hash = window.location.hash.substring(1);
+        if (!hash) {
+            hash = localStorage.getItem('user') ? 'profile.html' : 'home-content.html';
+        }
+        loadContent(hash);
+
+        // อัปเดต active class ที่เมนู
+        document.querySelectorAll('.nav-link').forEach(item => item.classList.remove('active'));
+        const activeLink = document.querySelector(`.nav-link[href='${hash}']`);
+        if (activeLink) activeLink.classList.add('active');
+    };
+
+    window.addEventListener('hashchange', handleHashChange);
+
+    // --- เริ่มต้นการทำงาน ---
+    updateNavbar(); // อัปเดตเมนูก่อน
+    handleHashChange(); // โหลดเนื้อหาเริ่มต้นตาม URL hash หรือสถานะล็อกอิน
 });
