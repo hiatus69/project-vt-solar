@@ -331,44 +331,33 @@ function handleNewOrderPage() {
         const customerNotes = document.getElementById('order-notes').value;
         
         try {
-            // 3.1 สร้าง Order Item (Snapshot) ก่อน
-            const orderItemResponse = await fetch(`${strapiUrl}/api/order-items`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${token}`
-                },
-                body: JSON.stringify({
-                    data: {
-                        packageName: serviceAttributes.serviceName,
-                        price: serviceAttributes.price,
-                        features: serviceAttributes.features,
-                        employeeNotes: customerNotes
-                    }
-                })
-            });
-            const orderItemData = await orderItemResponse.json();
-            if (orderItemData.error) throw new Error(orderItemData.error.message);
+    // ---- ไม่ต้องสร้าง Order Item ที่นี่แล้ว ----
 
-            // 3.2 สร้าง Order หลัก
-            const orderResponse = await fetch(`${strapiUrl}/api/orders`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${token}`
+    // ---- สร้าง Order หลัก โดยส่งข้อมูลทั้งหมดไปให้ Controller ใหม่ของเรา ----
+    const orderResponse = await fetch(`${strapiUrl}/api/orders`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({
+            data: {
+                // ส่งข้อมูลแพ็กเกจที่เลือกไปเป็นก้อนเดียว
+                orderItemData: {
+                    packageName: serviceAttributes.serviceName,
+                    price: serviceAttributes.price,
+                    features: serviceAttributes.features
                 },
-                body: JSON.stringify({
-                    data: {
-                        Status_order: 'Waiting_in_queue',
-                        customer: user.id,
-                        customerNotes: customerNotes,
-                        contactName: contactName,
-                        installationAddress: installationAddress,
-                        contactPhone: contactPhone,
-                        order_items: [orderItemData.data.id]
-                    }
-                })
-            });
+                // ส่งข้อมูลติดต่อที่กรอกไปเป็นอีกก้อน
+                contactInfo: {
+                    contactName: contactName,
+                    installationAddress: installationAddress,
+                    contactPhone: contactPhone,
+                    customerNotes: customerNotes
+                }
+            }
+        })
+    });
 
             const orderData = await orderResponse.json();
             if (orderData.error) throw new Error(orderData.error.message);
