@@ -376,52 +376,62 @@ function handleNewOrderPage() {
     });
 }
 
-// --- ฟังก์ชันสำหรับดึงประวัติออเดอร์ของลูกค้า (เวอร์ชันอัปเดต) ---
-function loadUserOrders() {
+// --- ฟังก์ชันสำหรับดึงประวัติออเดอร์ของลูกค้า (เวอร์ชันแก้ไขสมบูรณ์) ---
+async function loadUserOrders() {
     const ordersContainer = document.getElementById('user-orders-list');
     if (!ordersContainer) return;
 
     const token = localStorage.getItem('jwt');
-    if (!token) {
+    const userString = localStorage.getItem('user');
+
+    if (!token || !userString) {
         ordersContainer.innerHTML = '<p>กรุณาเข้าสู่ระบบเพื่อดูประวัติการสั่งซื้อ</p>';
         return;
     }
 
-    const ordersApiUrl = `${strapiUrl}/api/orders/me`;
+    try {
+        const user = JSON.parse(userString);
+        const userId = user.id;
 
-    fetch(ordersApiUrl, {
-        headers: { 'Authorization': `Bearer ${token}` }
-    })
-    .then(response => response.json())
-    .then(response => {
-        if (response.error) throw new Error(response.error.message);
+        // --- นี่คือบรรทัดที่ถูกต้อง 100% ---
+        const filterUrl = `${strapiUrl}/api/orders?filters[customer][id][$eq]=${userId}&populate=order_item&sort=createdAt:desc`;
 
-        const orders = response.data;
-        ordersContainer.innerHTML = '';
+        const response = await fetch(filterUrl, {
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
 
-        if (orders.length === 0) {
-            ordersContainer.innerHTML = '<p>ยังไม่มีประวัติการสั่งซื้อ</p>';
+        if (!response.ok) {
+            throw new Error(`เกิดข้อผิดพลาดจากเซิร์ฟเวอร์: ${response.status}`);
+        }
+
+        const responseData = await response.json();
+        const orders = responseData.data;
+
+        if (!orders || orders.length === 0) {
+            ordersContainer.innerHTML = '<p>คุณยังไม่มีประวัติการสั่งซื้อ</p>';
             return;
         }
-        
-        let ordersHTML = '<ul>';
+        ordersContainer.innerHTML = '';
         orders.forEach(order => {
-            const item = order.attributes || order;
-            
-            // --- จุดที่แก้ไข ---
-            // เรียกใช้ฟังก์ชัน translateStatus() ที่นี่
-            const thaiStatus = translateStatus(item.status);
-            
-            ordersHTML += `<li>วันที่: ${new Date(item.createdAt).toLocaleDateString('th-TH')} - สถานะ: <strong>${thaiStatus}</strong></li>`;
+            const orderData = order.attributes || order;
+            const orderCard = document.createElement('div');
+            orderCard.className = 'order-card';
+            const itemName = orderData.order_item?.data?.attributes?.packageName || 'ไม่มีข้อมูลสินค้า';
+            const itemPrice = orderData.order_item?.data?.attributes?.price || 0;
+            const thaiStatus = translateStatus(orderData.Status_order);
+            orderCard.innerHTML = `
+                <h3>Order ID: ${order.id}</h3>
+                <p><strong>สถานะ:</strong> ${thaiStatus}</p>
+                <p><strong>วันที่สั่ง:</strong> ${new Date(orderData.createdAt).toLocaleDateString('th-TH')}</p>
+                <p><strong>สินค้าที่สั่ง:</strong> ${itemName}</p>
+                <p><strong>ราคา:</strong> ${itemPrice.toLocaleString()} บาท</p>
+            `;
+            ordersContainer.appendChild(orderCard);
         });
-        ordersHTML += '</ul>';
-        
-        ordersContainer.innerHTML = ordersHTML;
-    })
-    .catch(error => {
-        console.error('Error fetching user orders:', error);
-        ordersContainer.innerHTML = '<p>เกิดข้อผิดพลาดในการโหลดข้อมูลออเดอร์</p>';
-    });
+
+    } catch (error) {
+        ordersContainer.innerHTML = `<p class="error">เกิดข้อผิดพลาดในการดึงข้อมูล: ${error.message}</p>`;
+    }
 }
 
 // ==========================================================
@@ -437,12 +447,13 @@ document.addEventListener('DOMContentLoaded', () => {
     function updateNavbar() {
         const userString = localStorage.getItem('user');
         if (!userString) {
+                //             <a href="register.html" class="nav-link">สมัครสมาชิก</a>
+                // <a href="login.html" class="nav-link">เข้าสู่ระบบ</a>
             navLinksContainer.innerHTML = `
                 <a href="home-content.html" class="nav-link">หน้าหลัก</a>
                 <a href="about.html" class="nav-link">เกี่ยวกับเรา</a>
                 <a href="contact.html" class="nav-link">ติดต่อเรา</a>
-                <a href="register.html" class="nav-link">สมัครสมาชิก</a>
-                <a href="login.html" class="nav-link">เข้าสู่ระบบ</a>
+
             `;
             return;
         }
@@ -489,9 +500,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 } else if (page.includes('login.html')) {
                     handleLogin();
                 } else if (page.includes('profile.html')) {
-                    loadUserProfile();
-                }
-                  else if (url.includes('new-order.html')) {
+                    loadUserProfile(); // เรียกฟังก์ชันแสดงข้อมูลส่วนตัว
+                    loadUserOrders();  // เรียกฟังก์ชันแสดงประวัติ Order
+                } else if (url.includes('new-order.html')) {
                     handleNewOrderPage();
                 }
             })
