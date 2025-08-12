@@ -447,13 +447,12 @@ document.addEventListener('DOMContentLoaded', () => {
     function updateNavbar() {
         const userString = localStorage.getItem('user');
         if (!userString) {
-                //             <a href="register.html" class="nav-link">สมัครสมาชิก</a>
-                // <a href="login.html" class="nav-link">เข้าสู่ระบบ</a>
             navLinksContainer.innerHTML = `
                 <a href="home-content.html" class="nav-link">หน้าหลัก</a>
                 <a href="about.html" class="nav-link">เกี่ยวกับเรา</a>
                 <a href="contact.html" class="nav-link">ติดต่อเรา</a>
-
+                <a href="register.html" class="nav-link">สมัครสมาชิก</a>
+                <a href="login.html" class="nav-link">เข้าสู่ระบบ</a>
             `;
             return;
         }
