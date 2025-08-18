@@ -1,0 +1,43 @@
+<main>
+    <section class="order-form-section">
+        <div class="container">
+            <h2>สั่งซื้อบริการติดตั้งโซล่าเซลล์</h2>
+            <p>กรุณากรอกข้อมูลด้านล่างให้ครบถ้วนเพื่อให้เจ้าหน้าที่ติดต่อกลับ</p>
+
+            <form id="new-order-form" class="order-form">
+
+                <fieldset>
+                    <legend>1. ข้อมูลติดต่อ</legend>
+                    <label for="order-contact-name">ชื่อ-นามสกุล ผู้ติดต่อ:</label>
+                    <input type="text" id="order-contact-name" name="contactName" required>
+
+                    <label for="order-install-address">ที่อยู่สำหรับติดตั้ง:</label>
+                    <textarea id="order-install-address" name="installationAddress" rows="3" required></textarea>
+
+                    <label for="order-contact-phone">เบอร์โทรศัพท์:</label>
+                    <input type="tel" id="order-contact-phone" name="contactPhone" required>
+
+                    <label for="citizenIdImage">รูปบัตรประจำตัวประชาชน:</label>
+<input type="file" id="citizenIdImage" name="files.citizenIdImage" accept="image/png, image/jpeg" required>
+<p style="font-size: 0.8em; color: #666;">(รองรับไฟล์ .jpg และ .png เท่านั้น)</p>
+<img id="imagePreview" src="" alt="ตัวอย่างรูปภาพ" style="max-width: 200px; margin-top: 10px; display: none;">
+                </fieldset>
+
+                <fieldset>
+                    <legend>2. แพ็กเกจที่สนใจ</legend>
+                    <label for="order-package-select">เลือกแพ็กเกจ:</label>
+                    <select id="order-package-select" name="package" required>
+                        <option value="">กำลังโหลดแพ็กเกจ...</option>
+                    </select>
+
+                    <label for="order-notes">รายละเอียดเพิ่มเติม (ถ้ามี):</label>
+                    <textarea id="order-notes" name="customerNotes" rows="3"></textarea>
+                </fieldset>
+
+                <button type="submit" class="btn btn-primary">ส่งข้อมูล</button>
+
+                <div id="order-feedback" class="form-feedback"></div>
+            </form>
+        </div>
+    </section>
+</main>
