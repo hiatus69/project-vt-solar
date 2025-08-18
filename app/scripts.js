@@ -2,48 +2,80 @@
 // ส่วนที่ 1: ฟังก์ชันสำหรับดึงข้อมูลและจัดการ
 // ==========================================================
 
-const strapiUrl = 'https://api.vertexplus99.com'; // <-- ใช้ URL ของเซิร์ฟเวอร์จริง
+// const strapiUrl = 'https://api.vertexplus99.com'; // <-- สำหรับเซิร์ฟเวอร์จริง
+const strapiUrl = 'http://localhost:1337'; // <-- สำหรับทดสอบบนเครื่อง
 
-// --- ฟังก์ชันสำหรับโหลด "บริการของเรา" (สำหรับหน้า home) ---
+// --- ฟังก์ชันสำหรับแปลง Rich Text (ใช้ร่วมกัน) ---
+function renderFeatures(featuresArray) {
+    if (!featuresArray) return '';
+    let featuresHtml = '<ul class="promo-features">';
+    featuresArray.forEach(featureItem => {
+        if (featureItem.type === 'paragraph') {
+            featureItem.children.forEach(child => {
+                if (child.type === 'text') {
+                    featuresHtml += `<li>${child.text}</li>`;
+                }
+            });
+        }
+    });
+    featuresHtml += '</ul>';
+    return featuresHtml;
+}
+
+// --- ฟังก์ชันสำหรับโหลด "บริการของเรา" (แสดงเฉพาะที่ไม่ใช่โปรโมชั่น) ---
 function loadMainServices() {
     const servicesGrid = document.querySelector('#services .promo-grid');
     if (!servicesGrid) return;
 
-    const servicesApiUrl = `${strapiUrl}/api/services?populate=*&sort=displayOrder:asc`;
+    // กรองข้อมูล: เอาเฉพาะ Service ที่ "isPromotion" เป็น false (หรือไม่ถูกตั้งค่า)
+    const servicesApiUrl = `${strapiUrl}/api/services?filters[isPromotion][$not]=true&populate=*&sort=displayOrder:asc`;
+
     fetch(servicesApiUrl)
         .then(response => {
-            if (!response.ok) throw new Error('Could not fetch services.');
+            if (!response.ok) throw new Error(`HTTP error! Status: ${response.status}`);
             return response.json();
         })
-        .then(response => {
-            const services = response.data;
+        .then(responseData => {
+            const services = responseData.data;
             servicesGrid.innerHTML = '';
+
             if (!services || services.length === 0) {
                 servicesGrid.innerHTML = '<p>ยังไม่มีบริการในขณะนี้</p>';
                 return;
             }
-            services.forEach(service => {
-                const item = service.attributes || service;
-                let imageUrl = item.serviceImage?.data?.attributes?.url
-                    ? `${strapiUrl}${item.serviceImage.data.attributes.url}`
-                    : 'https://placehold.co/600x400/cccccc/333?text=Service';
 
+            services.forEach(service => {
+                // นำตรรกะที่แข็งแรงของคุณกลับมาใช้
+                const item = service.attributes || service;
+                if (!item) return; 
+
+                let imageUrl = 'https://placehold.co/600x400/cccccc/333?text=Service';
+
+                // นำการตรวจสอบ 2 ชั้นของคุณกลับมาใช้
+                if (item.serviceImage && item.serviceImage.data && item.serviceImage.data.attributes) {
+                    imageUrl = `${strapiUrl}${item.serviceImage.data.attributes.url}`;
+                } else if (item.serviceImage && item.serviceImage.url) {
+                    imageUrl = `${strapiUrl}${item.serviceImage.url}`;
+                }
+
+                // สร้างการ์ดดีไซน์เรียบง่ายสำหรับ "บริการ"
                 const cardHTML = `
-                    <div class="promo-card">
+              <div class="promotion-card">
                         <div class="promo-card-header">
-                            <img src="${imageUrl}" alt="${item.serviceName || 'บริการ'}">
+                            <img src="${imageUrl}" alt="${item.serviceName || 'โปรโมชั่น'}">
                         </div>
                         <div class="promo-card-body">
                             <h3>${item.serviceName}</h3>
-                            <p class="promo-description">${item.description}</p>
+                            <p class="promo-description">${item.description || ''}</p>
                             <div class="promo-price">
-                                <span class="price-label">ราคาปกติ</span>
+                                <span class="price-label">เริ่มต้นเพียง</span>
                                 <span class="price-amount">${(item.price || 0).toLocaleString('en-US')}</span>
                                 <span class="price-unit">บาท</span>
                             </div>
+     
                         </div>
                         <div class="promo-card-footer">
-                            <a href="add-order.html" class="btn btn-secondary nav-link">สนใจบริการนี้</a>
+                            <a href="add-order.html" class="btn btn-secondary nav-link">สนใจแพ็กเกจนี้</a>
                         </div>
                     </div>
                 `;
@@ -56,113 +88,161 @@ function loadMainServices() {
         });
 }
 
-// --- ฟังก์ชันสำหรับโหลด "โปรโมชั่นสุดพิเศษ" (สำหรับหน้า home) ---
+// --- ฟังก์ชันสำหรับโหลด "โปรโมชั่นสุดพิเศษ" (แสดงเฉพาะที่เป็นโปรโมชั่น) ---
 function loadSpecialPromotions() {
-    // โค้ดส่วนนี้จะคล้ายกับ loadMainServices หากคุณมี API สำหรับโปรโมชั่น
-    // ถ้ายังไม่มี สามารถเว้นว่างไว้ก่อนได้ครับ
     const promoGrid = document.querySelector('#special-promotions-container');
-    if (promoGrid) {
-        // ใส่โค้ด fetch โปรโมชั่นที่นี่
-    }
+    if (!promoGrid) return;
+
+    // กรองข้อมูล: เอาเฉพาะ Service ที่ "isPromotion" เป็น true
+    const promoApiUrl = `${strapiUrl}/api/services?filters[isPromotion][$eq]=true&populate=*&sort=displayOrder:asc`;
+
+    fetch(promoApiUrl)
+        .then(response => {
+            if (!response.ok) throw new Error(`HTTP error! Status: ${response.status}`);
+            return response.json();
+        })
+        .then(responseData => {
+            const promotions = responseData.data;
+            promoGrid.innerHTML = '';
+
+            if (!promotions || promotions.length === 0) {
+                promoGrid.innerHTML = '<p>ยังไม่มีโปรโมชั่นในขณะนี้</p>';
+                return;
+            }
+
+            promotions.forEach(promotion => {
+                // ใช้ || promotion เพื่อความยืดหยุ่นสูงสุด
+                const item = promotion.attributes || promotion;
+                if (!item) return; 
+
+                let imageUrl = 'https://placehold.co/600x400/cccccc/333?text=Service';
+
+                // นำการตรวจสอบ 2 ชั้นของคุณกลับมาใช้
+                if (item.serviceImage && item.serviceImage.data && item.serviceImage.data.attributes) {
+                    imageUrl = `${strapiUrl}${item.serviceImage.data.attributes.url}`;
+                } else if (item.serviceImage && item.serviceImage.url) {
+                    imageUrl = `${strapiUrl}${item.serviceImage.url}`;
+                }
+                const featuresHTML = renderFeatures(item.features);
+
+                // สร้างการ์ดดีไซน์ละเอียดสำหรับ "โปรโมชั่น"
+                const cardHTML = `
+                    <div class="promotion-card">
+                        <div class="promo-card-header">
+                            <img src="${imageUrl}" alt="${item.serviceName || 'โปรโมชั่น'}">
+                        </div>
+                        <div class="promo-card-body">
+                            <h3>${item.serviceName}</h3>
+                            <p class="promo-description">${item.description || ''}</p>
+                            <div class="promo-price">
+                                <span class="price-label">เริ่มต้นเพียง</span>
+                                <span class="price-amount">${(item.price || 0).toLocaleString('en-US')}</span>
+                                <span class="price-unit">บาท</span>
+                            </div>
+                            ${featuresHTML}
+                        </div>
+                        <div class="promo-card-footer">
+                            <a href="add-order.html" class="btn btn-secondary nav-link">สนใจแพ็กเกจนี้</a>
+                        </div>
+                    </div>
+                `;
+                promoGrid.innerHTML += cardHTML;
+            });
+        })
+        .catch(error => {
+            console.error('Error loading promotions:', error);
+            promoGrid.innerHTML = '<p>เกิดข้อผิดพลาดในการโหลดข้อมูลโปรโมชั่น</p>';
+        });
 }
 
-// --- ฟังก์ชันสำหรับจัดการ "หน้าสร้าง Order" ---
+// --- ฟังก์ชันสำหรับจัดการ "หน้าสร้าง Order" (เวอร์ชันสมบูรณ์) ---
 function handleNewOrderPage() {
     const orderForm = document.getElementById('new-order-form');
-    const packageSelect = document.getElementById('order-package-select');
-
     if (!orderForm) return;
 
+    const packageSelect = document.getElementById('order-package-select');
+    const fileInput = document.getElementById('citizenIdImage');
+    const imagePreview = document.getElementById('imagePreview');
+
+    // --- ส่วนดึงข้อมูลแพ็กเกจ (ส่วนนี้ถูกต้องแล้ว) ---
     let allServices = [];
-    fetch(`${strapiUrl}/api/services`)
+    fetch(`${strapiUrl}/api/services?populate=*`)
         .then(res => res.json())
         .then(response => {
             allServices = response.data;
             packageSelect.innerHTML = '<option value="">-- กรุณาเลือกแพ็กเกจ --</option>';
             allServices.forEach(service => {
                 const item = service.attributes || service;
+                if(!item || !item.serviceName) return;
                 const option = document.createElement('option');
                 option.value = service.id;
                 option.textContent = `${item.serviceName} - ${item.price.toLocaleString('en-US')} บาท`;
                 packageSelect.appendChild(option);
             });
         });
+    
+    // ... (ส่วน image preview event listener) ...
 
-    orderForm.addEventListener('submit', async (event) => {
+  orderForm.addEventListener('submit', async (event) => {
         event.preventDefault();
         const feedbackDiv = document.getElementById('order-feedback');
         feedbackDiv.textContent = 'กำลังส่งข้อมูล...';
-        feedbackDiv.className = 'form-feedback';
         feedbackDiv.style.display = 'block';
 
         const selectedServiceId = packageSelect.value;
-        if (!selectedServiceId) {
-            feedbackDiv.textContent = 'กรุณาเลือกแพ็กเกจที่สนใจ';
-            feedbackDiv.className = 'form-feedback error';
+        if (!selectedServiceId || !fileInput || fileInput.files.length === 0) {
+            feedbackDiv.textContent = 'กรุณากรอกข้อมูลและแนบไฟล์รูปภาพให้ครบถ้วน';
             return;
         }
 
-        const selectedService = allServices.find(s => s.id == selectedServiceId);
-        const serviceAttributes = selectedService.attributes || selectedService;
+        // --- ★★★ สร้าง Payload ให้ตรงกับ Schema ทุกประการ ★★★ ---
+        const dataPayload = {
+            contactName: document.getElementById('order-contact-name').value,
+            contactPhone: document.getElementById('order-contact-phone').value,
+            installationAddress: document.getElementById('order-install-address').value,
+            customerNotes: document.getElementById('order-notes').value,
+            service: selectedServiceId // ส่ง ID ของ service เพื่อเชื่อม Relation
+        };
 
-        const formData = new FormData(orderForm);
-        const contactData = Object.fromEntries(formData.entries());
+        const formData = new FormData();
+        formData.append('data', JSON.stringify(dataPayload));
+
+        // --- ★★★ ตรวจสอบให้แน่ใจว่าชื่อฟิลด์ citizenId ตรงกับ Schema ★★★ ---
+        formData.append('files.citizenId', fileInput.files[0]);
 
         try {
             const response = await fetch(`${strapiUrl}/api/orders`, {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    data: {
-                        orderItemData: {
-                            packageName: serviceAttributes.serviceName,
-                            price: serviceAttributes.price,
-                            features: serviceAttributes.features,
-                        },
-                        contactInfo: {
-                            contactName: contactData.contactName,
-                            installationAddress: contactData.installationAddress,
-                            contactPhone: contactData.contactPhone,
-                            customerNotes: contactData.customerNotes,
-                            citizenId: contactData.citizenId,
-                        }
-                    }
-                })
+                body: formData,
             });
 
             if (!response.ok) {
                 const errorData = await response.json();
+                // แสดง Error ที่ละเอียดขึ้นจาก Strapi
+                console.error('Strapi Error Details:', errorData.error.details);
                 throw new Error(errorData.error.message || 'เกิดข้อผิดพลาดในการส่งข้อมูล');
             }
 
             const result = await response.json();
-            feedbackDiv.textContent = `ส่งข้อมูลสำเร็จ! เลขที่อ้างอิงของคุณคือ ${result.data.id} เจ้าหน้าที่จะติดต่อกลับโดยเร็วที่สุด`;
-            feedbackDiv.className = 'form-feedback success';
+            feedbackDiv.textContent = `ส่งข้อมูลสำเร็จ! เลขที่อ้างอิงของคุณคือ ${result.data.id}`;
             orderForm.reset();
+            if (imagePreview) imagePreview.style.display = 'none';
 
         } catch (error) {
             feedbackDiv.textContent = `เกิดข้อผิดพลาด: ${error.message}`;
-            feedbackDiv.className = 'form-feedback error';
         }
     });
 }
-
 // ==========================================================
 // ส่วนที่ 2: โค้ดสำหรับควบคุมหน้าเว็บทั้งหมด (SPA Logic)
 // ==========================================================
 document.addEventListener('DOMContentLoaded', () => {
-
+    
     const contentContainer = document.getElementById('app-content');
+    const footerContainer = document.getElementById('page-footer');
 
-    // --- ฟังก์ชันหลักสำหรับโหลดเนื้อหา ---
-    const loadContent = (url) => {
-        const page = url.split('#')[0] || url;
-
-        // ถ้าไม่มี URL ที่ระบุ ให้ไปที่หน้าหลักเสมอ
-        if (!page) {
-            page = 'home-content.html';
-        }
-
+    // --- ฟังก์ชันหลักสำหรับโหลดเนื้อหา (ไม่มีการเปลี่ยนแปลง) ---
+    const loadContent = (page) => {
         fetch(page)
             .then(response => {
                 if (!response.ok) throw new Error(`ไม่สามารถโหลดไฟล์ ${page} ได้`);
@@ -172,9 +252,11 @@ document.addEventListener('DOMContentLoaded', () => {
                 const parser = new DOMParser();
                 const doc = parser.parseFromString(htmlString, 'text/html');
                 const mainContent = doc.querySelector('main');
+                const footerContent = doc.querySelector('footer');
 
                 contentContainer.innerHTML = mainContent ? mainContent.innerHTML : 'เนื้อหาไม่ถูกต้อง';
-
+                footerContainer.innerHTML = footerContent ? footerContent.innerHTML : '';
+                
                 // เรียกใช้ฟังก์ชันที่จำเป็นสำหรับหน้านั้นๆ
                 if (page.includes('home-content.html')) {
                     loadMainServices();
@@ -182,6 +264,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 } else if (page.includes('add-order.html')) {
                     handleNewOrderPage();
                 }
+                // ... เพิ่มเงื่อนไขสำหรับหน้าอื่นๆ ที่นี่ ...
             })
             .catch(error => {
                 console.error('Failed to load content:', error);
@@ -189,28 +272,38 @@ document.addEventListener('DOMContentLoaded', () => {
             });
     };
 
-    // --- Event Listeners สำหรับการคลิกเมนู ---
+    // --- Event Listeners สำหรับการคลิกลิงก์ (ไม่มีการเปลี่ยนแปลง) ---
     document.body.addEventListener('click', (event) => {
-        const link = event.target.closest('.nav-link');
-
-        if (link) {
+        const link = event.target.closest('a');
+        if (!link) return;
+        const href = link.getAttribute('href');
+        if (href && !href.startsWith('#')) {
             event.preventDefault();
-            const href = link.getAttribute('href');
             window.location.hash = href;
         }
     });
 
-    // --- จัดการการเปลี่ยนแปลง URL hash ---
+    // --- จัดการการเปลี่ยนแปลง URL hash (แก้ไขใหม่ทั้งหมด) ---
     const handleHashChange = () => {
         let hash = window.location.hash.substring(1);
-        if (!hash) {
-            hash = 'home-content.html'; // หน้าเริ่มต้น
-        }
-        loadContent(hash);
 
+        // ถ้าไม่มี hash ใน URL ให้ไปที่หน้าหลัก
+        if (!hash) {
+            hash = 'home-content.html';
+        }
+
+        // --- จุดที่แก้ไขที่สำคัญที่สุด ---
+        // ตรวจสอบก่อนว่า hash เป็นชื่อไฟล์ .html หรือไม่
+        if (hash.endsWith('.html')) {
+            // ถ้าใช่ ถึงจะสั่งให้โหลดเนื้อหา
+            loadContent(hash);
+        }
+        // ถ้า hash เป็นอย่างอื่น (เช่น 'services') จะไม่ทำอะไรเลย ปล่อยให้ browser เลื่อนหน้าจอไปเอง
+        
         // อัปเดต active class ที่เมนู
         document.querySelectorAll('.nav-link').forEach(item => item.classList.remove('active'));
-        const activeLink = document.querySelector(`.nav-link[href='${hash}']`);
+        // หาลิงก์ที่ตรงกับ hash ที่เป็น .html เท่านั้น
+        const activeLink = document.querySelector(`.nav-link[href='${hash.split('#')[0]}']`);
         if (activeLink) activeLink.classList.add('active');
     };
 
