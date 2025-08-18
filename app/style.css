@@ -569,283 +569,144 @@ footer a:hover { text-decoration: underline; }
         grid-template-columns: 1fr; /* Mobile: แถวละ 1 */
     }
 }
-/* === AUTHENTICATION PAGE STYLES (Login/Register) === */
 
-.auth-page-section {
-    padding: 5rem 0;
-    background-color: #f8f9fa;
+/* === ORDER FORM SECTION === */
+.order-form-section {
+    padding: 40px 0;
+    background-color: #f9f9f9;
 }
 
-.auth-container {
-    max-width: 600px;
+.container {
+    max-width: 960px;
     margin: 0 auto;
-    background-color: #ffffff;
-    padding: 3rem;
-    border-radius: 12px;
-    box-shadow: 0 5px 25px rgba(0,0,0,0.07);
+    padding: 0 20px;
 }
 
-.auth-container h2 {
+h2 {
+    color: #333;
+    margin-bottom: 20px;
     text-align: center;
-    margin-top: 0;
 }
 
-.auth-form {
-    margin-top: 2.5rem;
-    display: flex;
-    flex-direction: column;
-    gap: 1.5rem;
+p {
+    color: #666;
+    margin-bottom: 30px;
+    text-align: center;
 }
 
-.form-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 1.5rem;
+.order-form {
+    background-color: #fff;
+    padding: 30px;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
-.form-group {
-    display: flex;
-    flex-direction: column;
-    text-align: left;
+fieldset {
+    margin-bottom: 25px;
+    padding: 20px;
+    border: 1px solid #ddd;
+    border-radius: 6px;
 }
 
-.form-group label {
-    margin-bottom: 0.5rem;
+legend {
+    font-size: 1.1em;
     font-weight: bold;
     color: #555;
+    padding: 0 10px;
 }
 
-.form-group input,
-.form-group textarea {
-    padding: 0.8rem 1rem;
+label {
+    display: block;
+    margin-bottom: 8px;
+    color: #444;
+    font-weight: bold;
+}
+
+input,
+textarea,
+select {
+    display: block;
+    width: 100%;
+    padding: 10px;
+    margin-bottom: 15px;
     border: 1px solid #ccc;
-    border-radius: 5px;
-    font-size: 1rem;
-    font-family: 'Kanit', sans-serif;
+    border-radius: 4px;
+    box-sizing: border-box;
+    font-size: 1em;
 }
 
-.form-group textarea {
+textarea {
     resize: vertical;
 }
 
-.form-feedback {
-    padding: 1rem;
-    border-radius: 5px;
-    display: none; /* ซ่อนไว้ก่อน */
+select {
+    appearance: none;
+    background-image: url('data:image/svg+xml;charset=UTF-8,<svg fill="%23333" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6"><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" /></svg>');
+    background-repeat: no-repeat;
+    background-position: right 10px center;
+    background-size: 1em;
+    padding-right: 30px;
+}
+
+.file-upload-container {
+    margin-bottom: 15px;
+}
+
+.file-upload-label {
+    display: block;
+    margin-bottom: 8px;
+    color: #444;
     font-weight: bold;
 }
 
-.form-feedback.error {
-    background-color: #f8d7da;
-    color: #721c24;
+.file-upload-input {
     display: block;
+    width: 100%;
+    padding: 10px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    box-sizing: border-box;
+    font-size: 1em;
+}
+
+.btn-primary {
+    background-color: #007bff;
+    color: white;
+    padding: 12px 20px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 1.1em;
+    transition: background-color 0.3s ease;
+    display: block;
+    width: 100%;
+    text-align: center;
+}
+
+.btn-primary:hover {
+    background-color: #0056b3;
+}
+
+.form-feedback {
+    margin-top: 20px;
+    padding: 10px;
+    border-radius: 4px;
+    font-weight: bold;
+    text-align: center;
+    display: none; /* ซ่อนไว้เริ่มต้น */
 }
 
 .form-feedback.success {
     background-color: #d4edda;
     color: #155724;
-    display: block;
+    border: 1px solid #c3e6cb;
 }
 
-.auth-form .btn {
-    width: 100%;
-    padding: 1rem;
-    font-size: 1.1rem;
+.form-feedback.error {
+    background-color: #f8d7da;
+    color: #721c24;
+    border: 1px solid #f5c6cb;
 }
 
-.auth-switch {
-    margin-top: 2rem;
-    text-align: center;
-}
-/* === PROFILE PAGE STYLES === */
-.profile-page-section {
-    padding: 5rem 0;
-    background-color: #f8f9fa;
-}
+/* ปรับแต่งเพิ่มเติมตามต้องการ */
 
-.profile-container {
-    max-width: 900px;
-    margin: 0 auto;
-    background-color: #ffffff;
-    padding: 3rem;
-    border-radius: 12px;
-    box-shadow: 0 5px 25px rgba(0,0,0,0.07);
-}
-
-.profile-data-grid {
-    display: grid;
-    grid-template-columns: auto 1fr; /* ปรับให้คอลัมน์แรกกว้างตามเนื้อหา */
-    gap: 1rem 2rem;
-    padding: 2rem;
-    background-color: #f1f1f1;
-    border-radius: 8px;
-    margin-bottom: 3rem;
-    text-align: left;
-}
-
-.profile-data-grid .label {
-    font-weight: bold;
-    color: #555;
-}
-
-.profile-actions {
-    display: flex;
-    justify-content: center;
-    gap: 1rem;
-    margin-bottom: 3rem;
-}
-
-.btn-danger {
-    background-color: #dc3545;
-    color: white;
-}
-
-.profile-container h3 {
-    text-align: center;
-    margin-top: 2rem;
-    margin-bottom: 1.5rem;
-}
-
-.orders-list {
-    text-align: center;
-    color: #777;
-}
-
-#logout-button.nav-link {
-    border-bottom-color: transparent; /* เอาเส้นใต้ของ nav-link ออก */
-}
-
-
-.dashboard-page-section {
-    padding: 4rem 0;
-    background-color: #f8f9fa;
-}
-
-.job-queue-container {
-    background-color: #ffffff;
-    padding: 2rem;
-    border-radius: 8px;
-    box-shadow: 0 4px 15px rgba(0,0,0,0.05);
-}
-
-.job-queue-table {
-    width: 100%;
-    border-collapse: collapse;
-    text-align: left;
-}
-
-.job-queue-table th,
-.job-queue-table td {
-    padding: 1rem;
-    border-bottom: 1px solid #e0e0e0;
-}
-
-.job-queue-table th {
-    background-color: #f1f1f1;
-}
-
-.job-queue-table td .nav-link {
-    font-weight: bold;
-    text-decoration: none;
-    color: #0056b3;
-}
-
-.job-detail-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 2rem;
-}
-
-.detail-card {
-    background-color: #ffffff;
-    padding: 2rem;
-    border-radius: 8px;
-    box-shadow: 0 4px 15px rgba(0,0,0,0.05);
-}
-
-.detail-card h3 {
-    margin-top: 0;
-    border-bottom: 2px solid #f1f1f1;
-    padding-bottom: 1rem;
-    margin-bottom: 1.5rem;
-}
-
-.info-box p, .notes-box {
-    margin: 0.5rem 0;
-    line-height: 1.8;
-}
-
-.notes-box {
-    background-color: #f8f9fa;
-    padding: 1rem;
-    border-radius: 5px;
-    min-height: 50px;
-}
-
-/* === EMPLOYEE DASHBOARD & DETAIL PAGES === */
-
-.dashboard-page-section {
-    padding: 4rem 0;
-    background-color: #f8f9fa;
-}
-
-.job-queue-container {
-    background-color: #ffffff;
-    padding: 2rem;
-    border-radius: 8px;
-    box-shadow: 0 4px 15px rgba(0,0,0,0.05);
-}
-
-.job-queue-table {
-    width: 100%;
-    border-collapse: collapse;
-    text-align: left;
-}
-
-.job-queue-table th,
-.job-queue-table td {
-    padding: 1rem;
-    border-bottom: 1px solid #e0e0e0;
-}
-
-.job-queue-table th {
-    background-color: #f1f1f1;
-}
-
-.job-queue-table td .nav-link {
-    font-weight: bold;
-    text-decoration: none;
-    color: #0056b3;
-}
-
-.job-detail-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 2rem;
-}
-
-.detail-card {
-    background-color: #ffffff;
-    padding: 2rem;
-    border-radius: 8px;
-    box-shadow: 0 4px 15px rgba(0,0,0,0.05);
-}
-
-.detail-card h3 {
-    margin-top: 0;
-    border-bottom: 2px solid #f1f1f1;
-    padding-bottom: 1rem;
-    margin-bottom: 1.5rem;
-}
-
-.info-box p, .notes-box {
-    margin: 0.5rem 0;
-    line-height: 1.8;
-}
-
-.notes-box {
-    background-color: #f8f9fa;
-    padding: 1rem;
-    border-radius: 5px;
-    min-height: 50px;
-}
