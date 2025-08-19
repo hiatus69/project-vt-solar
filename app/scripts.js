@@ -375,53 +375,39 @@ async function loadAllOrders() {
 }
 
 async function loadOrderDetail() {
-    // 1. เตรียมพื้นที่แสดงผล
+    // ... ส่วนบนของฟังก์ชันเหมือนเดิม ไม่ต้องเปลี่ยนแปลง ...
     const title = document.getElementById('order-detail-title');
     const content = document.getElementById('order-detail-content');
     if (!content) return;
-
-    // 2. ตรวจสอบ Token
     const token = localStorage.getItem('jwt_employee');
-    if (!token) {
-        window.location.hash = 'login.html';
-        return;
-    }
-
-    // 3. ดึง ID จาก URL
+    if (!token) { window.location.hash = 'login.html'; return; }
     const hash = window.location.hash;
     const match = hash.match(/id=(\d+)/);
     const orderId = match ? match[1] : null;
-
-    if (!orderId) {
-        content.innerHTML = '<p class="error">ไม่พบ ID ของ Order ใน URL</p>';
-        return;
-    }
-
+    if (!orderId) { content.innerHTML = '<p class="error">ไม่พบ ID</p>'; return; }
     title.textContent = `รายละเอียด Order #${orderId}`;
     content.innerHTML = '<p>กำลังโหลดข้อมูล...</p>';
 
-    // 4. เรียกใช้งาน API
     try {
-        // --- ★★★ แก้ไขบรรทัดนี้ครับ ★★★ ---
-        const apiUrl = `${strapiUrl}/api/orders/${orderId}?populate[0]=service&populate[1]=citizenId`;
-
+        const apiUrl = `${strapiUrl}/api/orders/employee/${orderId}`;
         const response = await fetch(apiUrl, {
             headers: { 'Authorization': `Bearer ${token}` }
         });
-
         const responseData = await response.json();
-
         if (!response.ok) {
-            console.error("[loadOrderDetail] Strapi ตอบกลับมาพร้อม Error:", responseData);
-            throw new Error(`ไม่สามารถดึงข้อมูลได้ (Status: ${response.status} - ${responseData.error.name})`);
+            throw new Error(`ไม่สามารถดึงข้อมูลได้ (Status: ${response.status})`);
         }
         
-        const item = responseData.data.attributes;
+        const orderData = responseData.data || responseData;
+        if (!orderData) {
+            throw new Error("ไม่พบข้อมูล Order ในการตอบกลับ");
+        }
+        const item = orderData.attributes || orderData;
 
-        // 5. เตรียมข้อมูลและแสดงผล
-        const serviceName = item.service?.data?.attributes?.serviceName || 'ไม่มีข้อมูลแพ็กเกจ';
-        const citizenIdImageUrl = item.citizenId?.data?.attributes?.url 
-            ? `${strapiUrl}${item.citizenId.data.attributes.url}`
+        // --- ★★★ แก้ไข 2 บรรทัดนี้ครับ ★★★ ---
+        const serviceName = item.service?.serviceName || 'ไม่มีข้อมูลแพ็กเกจ';
+        const citizenIdImageUrl = item.citizenId?.url 
+            ? `${strapiUrl}${item.citizenId.url}`
             : null;
 
         content.innerHTML = `
@@ -441,7 +427,7 @@ async function loadOrderDetail() {
                 <h3>รูปบัตรประชาชน</h3>
                 ${citizenIdImageUrl 
                     ? `<img src="${citizenIdImageUrl}" alt="รูปบัตรประชาชน" style="max-width: 100%; border-radius: 8px;">`
-                    : '<p>ไม่พบรูปภาพ</p>'
+                    : '<p>ไม่พบรูปภาพ</p>' // หมายเหตุ: ถ้า Order นี้ไม่มีรูป citizenId ก็จะแสดงข้อความนี้ ซึ่งถูกต้องแล้ว
                 }
             </div>
         `;
