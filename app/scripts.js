@@ -234,7 +234,7 @@ function handleNewOrderPage() {
     });
 }
 
-// --- ฟังก์ชันสำหรับจัดการหน้า "ล็อกอินพนักงาน" ---
+// --- ฟังก์ชันสำหรับจัดการหน้า "ล็อกอินพนักงาน" (เวอร์ชันแก้ไข) ---
 function handleEmployeeLogin() {
     const loginForm = document.getElementById('employee-login-form');
     if (!loginForm) return;
@@ -244,31 +244,48 @@ function handleEmployeeLogin() {
     loginForm.addEventListener('submit', async (event) => {
         event.preventDefault();
         feedbackDiv.textContent = 'กำลังตรวจสอบ...';
+        feedbackDiv.className = 'form-feedback';
         feedbackDiv.style.display = 'block';
 
         const formData = new FormData(loginForm);
         const data = Object.fromEntries(formData.entries());
 
         try {
-            const response = await fetch(`${strapiUrl}/api/auth/local`, {
+            // --- ขั้นตอนที่ 1: ล็อกอินเพื่อรับ JWT Token ---
+            const loginResponse = await fetch(`${strapiUrl}/api/auth/local`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(data),
             });
 
-            const result = await response.json();
+            const loginResult = await loginResponse.json();
 
-            if (result.error) {
-                throw new Error(result.error.message);
+            if (loginResult.error) {
+                throw new Error(loginResult.error.message || 'อีเมลหรือรหัสผ่านไม่ถูกต้อง');
             }
 
-            // ตรวจสอบว่าเป็น Role "Employee" หรือไม่
-            if (result.user && result.user.role.name === 'Employee') {
-                localStorage.setItem('jwt_employee', result.jwt); // เก็บ Token แยก
-                localStorage.setItem('employee', JSON.stringify(result.user));
+            const jwt = loginResult.jwt;
+
+            // --- ขั้นตอนที่ 2: ใช้ Token เพื่อดึงข้อมูล User พร้อม Role ---
+            const userResponse = await fetch(`${strapiUrl}/api/users/me?populate=role`, {
+                headers: {
+                    'Authorization': `Bearer ${jwt}`
+                }
+            });
+
+            if (!userResponse.ok) {
+                throw new Error('ไม่สามารถดึงข้อมูลผู้ใช้ได้');
+            }
+
+            const userWithRole = await userResponse.json();
+
+            // --- ขั้นตอนที่ 3: ตรวจสอบ Role ---
+            if (userWithRole && userWithRole.role && userWithRole.role.name === 'Employee') {
+                localStorage.setItem('jwt_employee', jwt);
+                localStorage.setItem('employee', JSON.stringify(userWithRole));
                 window.location.hash = 'dashboard.html'; // ส่งไปหน้า Dashboard
             } else {
-                throw new Error('คุณไม่มีสิทธิ์เข้าถึงระบบนี้');
+                throw new Error('คุณไม่มีสิทธิ์เข้าถึงระบบนี้ หรือไม่พบ Role');
             }
 
         } catch (error) {
@@ -278,7 +295,7 @@ function handleEmployeeLogin() {
     });
 }
 
-// --- ฟังก์ชันสำหรับโหลด "รายการ Order ทั้งหมด" ---
+// --- ฟังก์ชันสำหรับโหลด "รายการ Order ทั้งหมด" (เวอร์ชันแก้ไขล่าสุด) ---
 async function loadAllOrders() {
     const tableBody = document.getElementById('orders-table-body');
     if (!tableBody) return;
@@ -286,44 +303,152 @@ async function loadAllOrders() {
     const token = localStorage.getItem('jwt_employee');
     if (!token) {
         alert('กรุณาเข้าสู่ระบบก่อน');
-        window.location.hash = 'login-employee.html';
+        window.location.hash = 'login.html';
         return;
     }
 
+    const startDateInput = document.getElementById('start-date');
+    const endDateInput = document.getElementById('end-date');
+    const searchButton = document.getElementById('search-button');
+    const resetButton = document.getElementById('reset-button');
+
+    const fetchAndDisplayOrders = async (startDate = '', endDate = '') => {
+        tableBody.innerHTML = '<tr><td colspan="5">กำลังโหลดข้อมูล...</td></tr>';
+        
+        let apiUrl = `${strapiUrl}/api/orders?populate=service&sort=createdAt:desc`;
+        if (startDate && endDate) {
+            apiUrl += `&filters[createdAt][$gte]=${startDate}&filters[createdAt][$lte]=${endDate}`;
+        }
+
+        try {
+            const response = await fetch(apiUrl, {
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+
+            if (!response.ok) throw new Error(`ไม่สามารถดึงข้อมูลได้ (Status: ${response.status})`);
+
+            const responseData = await response.json();
+            const orders = responseData.data;
+
+            tableBody.innerHTML = '';
+            if (!orders || orders.length === 0) {
+                tableBody.innerHTML = '<tr><td colspan="5">ไม่พบ Order ที่ตรงกับเงื่อนไข</td></tr>';
+                return;
+            }
+
+            orders.forEach(order => {
+                // --- ★★★ จุดที่แก้ไข ★★★ ---
+                // ใช้ || order เพื่อรองรับข้อมูลที่ไม่มี .attributes
+                const item = order.attributes || order; 
+                if (!item) return; // เพิ่มการป้องกัน Error อีกชั้น
+
+                const row = `
+                    <tr>
+                        <td>${order.id}</td>
+                        <td>${new Date(item.createdAt).toLocaleDateString('th-TH')}</td>
+                        <td>${item.contactName || 'N/A'}</td>
+                        <td>${item.contactPhone || 'N/A'}</td>
+                        <td>${item.installationAddress}</td>
+                        <td><a href="#order-detail.html?id=${order.id}" class="nav-link">ดูข้อมูล</a></td>
+                    </tr>
+                `;
+                tableBody.innerHTML += row;
+            });
+
+        } catch (error) {
+            console.error(error);
+            tableBody.innerHTML = `<tr><td colspan="5">เกิดข้อผิดพลาด: ${error.message}</td></tr>`;
+        }
+    };
+
+    searchButton.addEventListener('click', () => {
+        fetchAndDisplayOrders(startDateInput.value, endDateInput.value);
+    });
+
+    resetButton.addEventListener('click', () => {
+        startDateInput.value = '';
+        endDateInput.value = '';
+        fetchAndDisplayOrders();
+    });
+
+    fetchAndDisplayOrders();
+}
+
+async function loadOrderDetail() {
+    // 1. เตรียมพื้นที่แสดงผล
+    const title = document.getElementById('order-detail-title');
+    const content = document.getElementById('order-detail-content');
+    if (!content) return;
+
+    // 2. ตรวจสอบ Token
+    const token = localStorage.getItem('jwt_employee');
+    if (!token) {
+        window.location.hash = 'login.html';
+        return;
+    }
+
+    // 3. ดึง ID จาก URL
+    const hash = window.location.hash;
+    const match = hash.match(/id=(\d+)/);
+    const orderId = match ? match[1] : null;
+
+    if (!orderId) {
+        content.innerHTML = '<p class="error">ไม่พบ ID ของ Order ใน URL</p>';
+        return;
+    }
+
+    title.textContent = `รายละเอียด Order #${orderId}`;
+    content.innerHTML = '<p>กำลังโหลดข้อมูล...</p>';
+
+    // 4. เรียกใช้งาน API
     try {
-        // ใช้ sort=createdAt:desc เพื่อเรียงตามเวลาล่าสุดก่อน
-        const response = await fetch(`${strapiUrl}/api/orders?populate=service&sort=createdAt:desc`, {
+        // --- ★★★ แก้ไขบรรทัดนี้ครับ ★★★ ---
+        const apiUrl = `${strapiUrl}/api/orders/${orderId}?populate[0]=service&populate[1]=citizenId`;
+
+        const response = await fetch(apiUrl, {
             headers: { 'Authorization': `Bearer ${token}` }
         });
 
-        if (!response.ok) throw new Error('ไม่สามารถดึงข้อมูลได้');
-
         const responseData = await response.json();
-        const orders = responseData.data;
 
-        tableBody.innerHTML = '';
-        if (!orders || orders.length === 0) {
-            tableBody.innerHTML = '<tr><td colspan="5">ยังไม่มี Order ในระบบ</td></tr>';
-            return;
+        if (!response.ok) {
+            console.error("[loadOrderDetail] Strapi ตอบกลับมาพร้อม Error:", responseData);
+            throw new Error(`ไม่สามารถดึงข้อมูลได้ (Status: ${response.status} - ${responseData.error.name})`);
         }
+        
+        const item = responseData.data.attributes;
 
-        orders.forEach(order => {
-            const item = order.attributes;
-            const row = `
-                <tr>
-                    <td>${order.id}</td>
-                    <td>${item.contactName}</td>
-                    <td>${new Date(item.createdAt).toLocaleDateString('th-TH')}</td>
-                    <td>${item.Status_order || 'N/A'}</td>
-                    <td><a href="#order-detail.html?id=${order.id}" class="nav-link">ดูข้อมูล</a></td>
-                </tr>
-            `;
-            tableBody.innerHTML += row;
-        });
+        // 5. เตรียมข้อมูลและแสดงผล
+        const serviceName = item.service?.data?.attributes?.serviceName || 'ไม่มีข้อมูลแพ็กเกจ';
+        const citizenIdImageUrl = item.citizenId?.data?.attributes?.url 
+            ? `${strapiUrl}${item.citizenId.data.attributes.url}`
+            : null;
+
+        content.innerHTML = `
+            <div class="detail-card">
+                <h3>ข้อมูลลูกค้า</h3>
+                <p><strong>ชื่อผู้ติดต่อ:</strong> ${item.contactName || 'N/A'}</p>
+                <p><strong>เบอร์โทรศัพท์:</strong> ${item.contactPhone || 'N/A'}</p>
+                <p><strong>ที่อยู่ติดตั้ง:</strong> ${item.installationAddress || 'N/A'}</p>
+            </div>
+            <div class="detail-card">
+                <h3>ข้อมูลแพ็กเกจ</h3>
+                <p><strong>แพ็กเกจที่เลือก:</strong> ${serviceName}</p>
+                <p><strong>หมายเหตุจากลูกค้า:</strong></p>
+                <div class="notes-box">${item.customerNotes || 'ไม่มี'}</div>
+            </div>
+            <div class="detail-card" style="grid-column: 1 / -1;">
+                <h3>รูปบัตรประชาชน</h3>
+                ${citizenIdImageUrl 
+                    ? `<img src="${citizenIdImageUrl}" alt="รูปบัตรประชาชน" style="max-width: 100%; border-radius: 8px;">`
+                    : '<p>ไม่พบรูปภาพ</p>'
+                }
+            </div>
+        `;
 
     } catch (error) {
-        console.error(error);
-        tableBody.innerHTML = `<tr><td colspan="5">เกิดข้อผิดพลาด: ${error.message}</td></tr>`;
+        console.error("[loadOrderDetail] เกิดข้อผิดพลาด:", error);
+        content.innerHTML = `<p class="error">เกิดข้อผิดพลาด: ${error.message}</p>`;
     }
 }
 
@@ -357,10 +482,12 @@ document.addEventListener('DOMContentLoaded', () => {
                     loadSpecialPromotions();
                 } else if (page.includes('add-order.html')) {
                     handleNewOrderPage();
-                } else if (page.includes('login-employee.html')) { // <-- เพิ่ม
+                } else if (page.includes('login.html')) { // <-- เพิ่ม
                      handleEmployeeLogin();
                 } else if (page.includes('dashboard.html')) { // <-- เพิ่ม
                       loadAllOrders();
+                } else if (page.includes('order-detail.html')) {
+                    loadOrderDetail();
             }
                 // ... เพิ่มเงื่อนไขสำหรับหน้าอื่นๆ ที่นี่ ...
             })
@@ -370,40 +497,37 @@ document.addEventListener('DOMContentLoaded', () => {
             });
     };
 
-    // --- Event Listeners สำหรับการคลิกลิงก์ (ไม่มีการเปลี่ยนแปลง) ---
+// --- Event Listeners ที่สมบูรณ์ ---
     document.body.addEventListener('click', (event) => {
         const link = event.target.closest('a');
         if (!link) return;
+
         const href = link.getAttribute('href');
-        if (href && !href.startsWith('#')) {
+        if (!href) return;
+        
+        // ถ้าเป็นลิงก์สำหรับเปลี่ยนหน้า SPA เท่านั้น ถึงจะทำงาน
+        if (href.endsWith('.html')) {
             event.preventDefault();
             window.location.hash = href;
         }
+        // ถ้าเป็นลิงก์อื่นๆ (เช่น #services หรือ https://...) จะปล่อยให้ Browser จัดการเอง
     });
 
-    // --- จัดการการเปลี่ยนแปลง URL hash (แก้ไขใหม่ทั้งหมด) ---
-    const handleHashChange = () => {
-        let hash = window.location.hash.substring(1);
+const handleHashChange = () => {
+    let hash = window.location.hash.substring(1) || 'home-content.html';
 
-        // ถ้าไม่มี hash ใน URL ให้ไปที่หน้าหลัก
-        if (!hash) {
-            hash = 'home-content.html';
-        }
+    // แยกชื่อไฟล์ออกจากพารามิเตอร์
+    const pageName = hash.split('?')[0];
 
-        // --- จุดที่แก้ไขที่สำคัญที่สุด ---
-        // ตรวจสอบก่อนว่า hash เป็นชื่อไฟล์ .html หรือไม่
-        if (hash.endsWith('.html')) {
-            // ถ้าใช่ ถึงจะสั่งให้โหลดเนื้อหา
-            loadContent(hash);
-        }
-        // ถ้า hash เป็นอย่างอื่น (เช่น 'services') จะไม่ทำอะไรเลย ปล่อยให้ browser เลื่อนหน้าจอไปเอง
+    if (pageName.endsWith('.html')) {
+        loadContent(pageName);
+    }
 
-        // อัปเดต active class ที่เมนู
-        document.querySelectorAll('.nav-link').forEach(item => item.classList.remove('active'));
-        // หาลิงก์ที่ตรงกับ hash ที่เป็น .html เท่านั้น
-        const activeLink = document.querySelector(`.nav-link[href='${hash.split('#')[0]}']`);
-        if (activeLink) activeLink.classList.add('active');
-    };
+    // อัปเดต active class ที่เมนู
+    document.querySelectorAll('.nav-link').forEach(item => item.classList.remove('active'));
+    const activeLink = document.querySelector(`.nav-link[href='${pageName}']`);
+    if (activeLink) activeLink.classList.add('active');
+};
 
     window.addEventListener('hashchange', handleHashChange);
 
