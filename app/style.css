@@ -971,5 +971,29 @@ select {
     border: 1px solid #f5c6cb;
 }
 
-/* ปรับแต่งเพิ่มเติมตามต้องการ */
-
+/* === Filter Controls for Dashboard === */
+.filter-controls {
+    display: flex;
+    gap: 1rem;
+    align-items: center;
+    margin-bottom: 2rem;
+    padding: 1.5rem;
+    background-color: #f1f1f1;
+    border-radius: 8px;
+}
+.filter-controls .form-group {
+    display: flex;
+    flex-direction: column;
+}
+.filter-controls label {
+    font-size: 0.9em;
+    margin-bottom: 0.25rem;
+}
+.filter-controls input[type="date"] {
+    padding: 0.5rem;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+}
+.filter-controls .btn {
+    align-self: flex-end; /* ทำให้ปุ่มอยู่ล่างสุด */
+}
