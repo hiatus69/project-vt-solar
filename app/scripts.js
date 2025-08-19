@@ -183,55 +183,75 @@ function handleNewOrderPage() {
 
     // ... (ส่วน image preview event listener) ...
 
-  orderForm.addEventListener('submit', async (event) => {
-        event.preventDefault();
-        const feedbackDiv = document.getElementById('order-feedback');
-        feedbackDiv.textContent = 'กำลังส่งข้อมูล...';
-        feedbackDiv.style.display = 'block';
+orderForm.addEventListener('submit', async (event) => {
+    event.preventDefault();
+    const feedbackDiv = document.getElementById('order-feedback');
+    feedbackDiv.textContent = 'กำลังส่งข้อมูล...';
+    feedbackDiv.style.display = 'block';
 
-        const selectedServiceId = packageSelect.value;
-        if (!selectedServiceId || !fileInput || fileInput.files.length === 0) {
-            feedbackDiv.textContent = 'กรุณากรอกข้อมูลและแนบไฟล์รูปภาพให้ครบถ้วน';
-            return;
+    const selectedServiceId = packageSelect.value;
+    const file = fileInput.files[0];
+
+    if (!selectedServiceId || !file) {
+        feedbackDiv.textContent = 'กรุณากรอกข้อมูลและแนบไฟล์รูปภาพให้ครบถ้วน';
+        return;
+    }
+
+    try {
+        // --- ขั้นตอนที่ 1: อัปโหลดไฟล์ไปที่ Media Library ก่อน ---
+        console.log("ขั้นตอนที่ 1: กำลังอัปโหลดไฟล์...");
+        const uploadFormData = new FormData();
+        uploadFormData.append('files', file);
+
+        const uploadResponse = await fetch(`${strapiUrl}/api/upload`, {
+            method: 'POST',
+            body: uploadFormData,
+            // ไม่ต้องมี Authorization header ถ้าเป็นการอัปโหลดแบบ Public
+        });
+
+        if (!uploadResponse.ok) {
+            throw new Error('ไม่สามารถอัปโหลดไฟล์ได้');
         }
 
-        // --- ★★★ สร้าง Payload ให้ตรงกับ Schema ทุกประการ ★★★ ---
+        // --- ขั้นตอนที่ 2: ดึง ID ของไฟล์ที่อัปโหลดสำเร็จออกมา ---
+        const uploadedFiles = await uploadResponse.json();
+        const imageId = uploadedFiles[0].id; // <-- ID ของไฟล์ใน Media Library
+        console.log(`ขั้นตอนที่ 2: อัปโหลดไฟล์สำเร็จ ได้ ID: ${imageId}`);
+
+        // --- ขั้นตอนที่ 3: สร้าง Order โดยส่งข้อมูลเป็น JSON ธรรมดา ---
+        console.log("ขั้นตอนที่ 3: กำลังสร้าง Order...");
         const dataPayload = {
             contactName: document.getElementById('order-contact-name').value,
             contactPhone: document.getElementById('order-contact-phone').value,
             installationAddress: document.getElementById('order-install-address').value,
             customerNotes: document.getElementById('order-notes').value,
-            service: selectedServiceId // ส่ง ID ของ service เพื่อเชื่อม Relation
+            service: selectedServiceId,
+            citizenId: imageId // <-- ★★★ ส่ง ID ของไฟล์ไปเชื่อมความสัมพันธ์ ★★★
         };
 
-        const formData = new FormData();
-        formData.append('data', JSON.stringify(dataPayload));
+        const orderResponse = await fetch(`${strapiUrl}/api/orders`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ data: dataPayload }), // <-- ส่งเป็น JSON ปกติ
+        });
 
-        // --- ★★★ ตรวจสอบให้แน่ใจว่าชื่อฟิลด์ citizenId ตรงกับ Schema ★★★ ---
-        formData.append('files.citizenId', fileInput.files[0]);
-
-        try {
-            const response = await fetch(`${strapiUrl}/api/orders`, {
-                method: 'POST',
-                body: formData,
-            });
-
-            if (!response.ok) {
-                const errorData = await response.json();
-                // แสดง Error ที่ละเอียดขึ้นจาก Strapi
-                console.error('Strapi Error Details:', errorData.error.details);
-                throw new Error(errorData.error.message || 'เกิดข้อผิดพลาดในการส่งข้อมูล');
-            }
-
-            const result = await response.json();
-            feedbackDiv.textContent = `ส่งข้อมูลสำเร็จ! เลขที่อ้างอิงของคุณคือ ${result.data.id}`;
-            orderForm.reset();
-            if (imagePreview) imagePreview.style.display = 'none';
-
-        } catch (error) {
-            feedbackDiv.textContent = `เกิดข้อผิดพลาด: ${error.message}`;
+        if (!orderResponse.ok) {
+            const errorData = await orderResponse.json();
+            console.error('Strapi Error Details:', errorData.error.details);
+            throw new Error(errorData.error.message || 'เกิดข้อผิดพลาดในการสร้าง Order');
         }
-    });
+
+        const result = await orderResponse.json();
+        feedbackDiv.textContent = `ส่งข้อมูลสำเร็จ! เลขที่อ้างอิงของคุณคือ ${result.data.id}`;
+        orderForm.reset();
+        if (imagePreview) imagePreview.style.display = 'none';
+
+    } catch (error) {
+        feedbackDiv.textContent = `เกิดข้อผิดพลาด: ${error.message}`;
+    }
+});
 }
 
 // --- ฟังก์ชันสำหรับจัดการหน้า "ล็อกอินพนักงาน" (เวอร์ชันแก้ไข) ---
