@@ -2,8 +2,8 @@
 // ส่วนที่ 1: ฟังก์ชันสำหรับดึงข้อมูลและจัดการ
 // ==========================================================
 
-// const strapiUrl = 'https://api.vertexplus99.com'; // <-- สำหรับเซิร์ฟเวอร์จริง
-const strapiUrl = 'http://localhost:1337'; // <-- สำหรับทดสอบบนเครื่อง
+const strapiUrl = 'https://api.vertexplus99.com'; // <-- สำหรับเซิร์ฟเวอร์จริง
+// const strapiUrl = 'http://localhost:1337'; // <-- สำหรับทดสอบบนเครื่อง
 
 // --- ฟังก์ชันสำหรับแปลง Rich Text (ใช้ร่วมกัน) ---
 function renderFeatures(featuresArray) {
