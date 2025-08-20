@@ -22,6 +22,28 @@ function renderFeatures(featuresArray) {
     return featuresHtml;
 }
 
+// --- ฟังก์ชันสำหรับจัดการเมนู Responsive ---
+function setupResponsiveNav() {
+    const navToggle = document.querySelector('.nav-toggle');
+    const navLinks = document.querySelector('.nav-links');
+
+    if (!navToggle || !navLinks) return;
+
+    // เมื่อปุ่ม Hamburger ถูกคลิก
+    navToggle.addEventListener('click', () => {
+        navToggle.classList.toggle('active');
+        navLinks.classList.toggle('active');
+    });
+
+    // (เพิ่มเติม) ทำให้เมนูปิดเมื่อมีการคลิกที่ลิงก์ (ดีสำหรับ SPA)
+    navLinks.addEventListener('click', (event) => {
+        if (event.target.classList.contains('nav-link')) {
+            navToggle.classList.remove('active');
+            navLinks.classList.remove('active');
+        }
+    });
+}
+
 // --- ฟังก์ชันสำหรับโหลด "บริการของเรา" (แสดงเฉพาะที่ไม่ใช่โปรโมชั่น) ---
 function loadMainServices() {
     const servicesGrid = document.querySelector('#services .promo-grid');
@@ -75,7 +97,7 @@ function loadMainServices() {
 
                         </div>
                         <div class="promo-card-footer">
-                            <a href="add-order.html" class="btn btn-secondary nav-link">สนใจแพ็กเกจนี้</a>
+                            <a href="#add-order.html" class="btn btn-secondary nav-link">สนใจแพ็กเกจนี้</a>
                         </div>
                     </div>
                 `;
@@ -142,7 +164,7 @@ function loadSpecialPromotions() {
                             ${featuresHTML}
                         </div>
                         <div class="promo-card-footer">
-                            <a href="add-order.html" class="btn btn-secondary nav-link">สนใจแพ็กเกจนี้</a>
+                            <a href="#add-order.html" class="btn btn-secondary nav-link">สนใจแพ็กเกจนี้</a>
                         </div>
                     </div>
                 `;
@@ -322,8 +344,7 @@ async function loadAllOrders() {
 
     const token = localStorage.getItem('jwt_employee');
     if (!token) {
-        alert('กรุณาเข้าสู่ระบบก่อน');
-        window.location.hash = 'login.html';
+        alert('คุณไม่มีสิทธิเข้าหน้านี้');
         return;
     }
 
@@ -459,14 +480,14 @@ async function loadOrderDetail() {
 }
 
 // ==========================================================
-// ส่วนที่ 2: โค้ดสำหรับควบคุมหน้าเว็บทั้งหมด (SPA Logic)
+// ส่วนที่ 2: โค้ดสำหรับควบคุมหน้าเว็บทั้งหมด (SPA Logic - เวอร์ชันปรับปรุง)
 // ==========================================================
 document.addEventListener('DOMContentLoaded', () => {
 
     const contentContainer = document.getElementById('app-content');
     const footerContainer = document.getElementById('page-footer');
 
-    // --- ฟังก์ชันหลักสำหรับโหลดเนื้อหา (ไม่มีการเปลี่ยนแปลง) ---
+    // --- ฟังก์ชันหลักสำหรับโหลดเนื้อหา ---
     const loadContent = (page) => {
         fetch(page)
             .then(response => {
@@ -488,14 +509,13 @@ document.addEventListener('DOMContentLoaded', () => {
                     loadSpecialPromotions();
                 } else if (page.includes('add-order.html')) {
                     handleNewOrderPage();
-                } else if (page.includes('login.html')) { // <-- เพิ่ม
-                     handleEmployeeLogin();
-                } else if (page.includes('dashboard.html')) { // <-- เพิ่ม
-                      loadAllOrders();
+                } else if (page.includes('login.html')) {
+                    handleEmployeeLogin();
+                } else if (page.includes('dashboard.html')) {
+                    loadAllOrders();
                 } else if (page.includes('order-detail.html')) {
                     loadOrderDetail();
-            }
-                // ... เพิ่มเงื่อนไขสำหรับหน้าอื่นๆ ที่นี่ ...
+                }
             })
             .catch(error => {
                 console.error('Failed to load content:', error);
@@ -503,40 +523,57 @@ document.addEventListener('DOMContentLoaded', () => {
             });
     };
 
-// --- Event Listeners ที่สมบูรณ์ ---
+    // --- ★★★ Event Listener ตัวจัดการหลัก (ใช้ Event Delegation) ★★★ ---
+    // เราจะใช้ Listener แค่ตัวเดียวในการจัดการคลิกทั้งหมดบนหน้าเว็บ
     document.body.addEventListener('click', (event) => {
-        const link = event.target.closest('a');
-        if (!link) return;
-
-        const href = link.getAttribute('href');
-        if (!href) return;
         
-        // ถ้าเป็นลิงก์สำหรับเปลี่ยนหน้า SPA เท่านั้น ถึงจะทำงาน
-        if (href.endsWith('.html')) {
-            event.preventDefault();
-            window.location.hash = href;
+        // ส่วนที่ 1: ตรวจสอบว่าผู้ใช้คลิกปุ่ม Hamburger หรือไม่
+        const navToggle = event.target.closest('.nav-toggle');
+        if (navToggle) {
+            const navLinks = document.querySelector('.nav-links');
+            navToggle.classList.toggle('active');
+            if (navLinks) {
+                navLinks.classList.toggle('active');
+            }
         }
-        // ถ้าเป็นลิงก์อื่นๆ (เช่น #services หรือ https://...) จะปล่อยให้ Browser จัดการเอง
+
+        // ส่วนที่ 2: ตรวจสอบว่าผู้ใช้คลิกลิงก์สำหรับเปลี่ยนหน้า SPA หรือไม่
+        const navLink = event.target.closest('a.nav-link');
+        if (navLink) {
+            const href = navLink.getAttribute('href');
+            // ตรวจสอบว่าเป็นลิงก์ภายในแบบ hash ที่มี .html เท่านั้น
+            if (href && href.startsWith('#') && href.includes('.html')) {
+                event.preventDefault(); // หยุดการทำงานปกติของลิงก์
+                window.location.hash = href; // เปลี่ยน hash ใน URL เพื่อให้ hashchange ทำงาน
+
+                // (เพิ่มเติม) สั่งปิดเมนูมือถือทันทีหลังจากคลิกลิงก์
+                const openNavToggle = document.querySelector('.nav-toggle.active');
+                const openNavLinks = document.querySelector('.nav-links.active');
+                if (openNavToggle && openNavLinks) {
+                    openNavToggle.classList.remove('active');
+                    openNavLinks.classList.remove('active');
+                }
+            }
+        }
     });
 
-const handleHashChange = () => {
-    let hash = window.location.hash.substring(1) || 'home-content.html';
+    // --- ส่วนจัดการ Hash Change (เหมือนเดิม) ---
+    const handleHashChange = () => {
+        let hash = window.location.hash.substring(1) || 'home-content.html';
+        const pageName = hash.split('?')[0];
 
-    // แยกชื่อไฟล์ออกจากพารามิเตอร์
-    const pageName = hash.split('?')[0];
+        if (pageName.endsWith('.html')) {
+            loadContent(pageName);
+        }
 
-    if (pageName.endsWith('.html')) {
-        loadContent(pageName);
-    }
-
-    // อัปเดต active class ที่เมนู
-    document.querySelectorAll('.nav-link').forEach(item => item.classList.remove('active'));
-    const activeLink = document.querySelector(`.nav-link[href='${pageName}']`);
-    if (activeLink) activeLink.classList.add('active');
-};
+        document.querySelectorAll('.nav-link').forEach(item => item.classList.remove('active'));
+        // แก้ไข selector ให้แม่นยำขึ้น
+        const activeLink = document.querySelector(`.nav-link[href='#${pageName}']`);
+        if (activeLink) activeLink.classList.add('active');
+    };
 
     window.addEventListener('hashchange', handleHashChange);
 
-    // --- เริ่มต้นการทำงาน ---
+    // --- เริ่มต้นการทำงาน (เหมือนเดิม) ---
     handleHashChange(); // โหลดเนื้อหาเริ่มต้นตาม URL
 });
