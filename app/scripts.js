@@ -97,7 +97,7 @@ function loadMainServices() {
 
                         </div>
                         <div class="promo-card-footer">
-                            <a href="#add-order.html" class="btn btn-secondary nav-link">สนใจแพ็กเกจนี้</a>
+                            <a href="#contact.html" class="btn btn-secondary nav-link">สนใจแพ็กเกจนี้</a>
                         </div>
                     </div>
                 `;
@@ -164,7 +164,7 @@ function loadSpecialPromotions() {
                             ${featuresHTML}
                         </div>
                         <div class="promo-card-footer">
-                            <a href="#add-order.html" class="btn btn-secondary nav-link">สนใจแพ็กเกจนี้</a>
+                            <a href="#contact.html" class="btn btn-secondary nav-link">สนใจแพ็กเกจนี้</a>
                         </div>
                     </div>
                 `;
